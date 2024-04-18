@@ -1,0 +1,23 @@
+1. Sign Up, Sign In
+2. Get all Schedule using user_id
+3. Load the schedule for the user
+4. User can Chat with Belle
+4.1. User can add schedule as per the user
+4.2. User can reschedule as per the user
+4.3. User can delete the schedule as per the user
+5. Conversations with belle will be facilated by nlp model (by Crich) and necessary data for scheduling
+should be extracted
+6. After extracting necessary data, data will be used to check if schedule is available if user
+wants to add another schedule
+7.1. If schedule is available, add schedule to database
+7.2. If schedule is unavailable, using recommendaion model and previous schedule data, app
+will recommmend 2 similar schedules for the user, belle will ask the user if he/she wants to resched
+his wanted tasks on suggested dates or if not, what is his other option
+8. After user decided what to do, schedule will be added to database if criteria is met
+9. If rescheduling, check if the new schedule is available and if not use the recommendaion model again
+and repeat step 8
+10. If delete, just delete data from database
+11. If users have log in, schedule should save on local database for reminding of user, updating of schedule 
+should be done after loging in and before signing out
+12. Alarms should go on even when app is closed, as long as the schedule date has been reached
+
