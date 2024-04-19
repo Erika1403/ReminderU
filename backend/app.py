@@ -3,6 +3,8 @@ from supabase import Client, create_client
 from os import environ
 import json
 import recommendation as rec
+import categorization as cg
+from datetime import datetime as dt
 
 
 app = Flask(__name__)
@@ -10,6 +12,8 @@ db_url = environ.get("DATABASE_URL")
 db_key = environ.get("DATABASE_KEY")
 supabase: Client = create_client(db_url, db_key)
 
+time_format = "%H:%M:%S"
+date_format = "%Y-%m-%d"
 #############################################################
 # for signing up, for new users
 # {
@@ -80,6 +84,7 @@ def get_schedule(user_id):
 
 # input are 2 json objects, named schedule_records and new_schedule
 # Working Normally
+# if schedule is available, add schedule, else talk to user
 @app.route('/check_availability', methods=["POST"])
 def check_availability():
     try:
@@ -99,7 +104,26 @@ def check_availability():
 # for adding/updating/deleting schedule
 @app.route('/add_schedule', methods=["POST"])
 def add_schedule():
-    pass
+    try:
+        data = request.get_json()
+        sched_name = data["Event"]
+        start = data["Start Time"]
+        end = data["End Time"]
+        date = data["Date"]
+        loc = data["Location"]
+        category = cg.predict_category(sched_name)[0]
+        data, count = supabase.table('countries').insert({
+            "Date": date, 
+            "Start Time": start,
+            "End Time": end,
+            "Location": loc,
+            "Event": sched_name,
+            "Category": category
+            }).execute()
+        print(data)
+        return{"Success": "egegegrde"}
+    except Exception as e:
+         return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 @app.route('/update_schedule', methods=['PUT'])
 def update_schedule():
