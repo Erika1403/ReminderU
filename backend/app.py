@@ -15,6 +15,8 @@ supabase: Client = create_client(db_url, db_key)
 time_format = "%H:%M:%S"
 date_format = "%Y-%m-%d"
 #############################################################
+# FOR TESTING ONLY!!! 
+
 # for signing up, for new users
 # {
 #   "user_name": "your name", 
@@ -73,7 +75,6 @@ def sign_out():
 def get_schedule(user_id):
     try:
         data = supabase.table("Schedule").select("Event, Date, Start Time, End Time, Location, Category").eq("user_id", user_id).execute()
-        print(user_id)
         if data:
             return jsonify(data.data)
         else:
@@ -102,8 +103,20 @@ def check_availability():
     
 
 # for adding/updating/deleting schedule
-@app.route('/add_schedule', methods=["POST"])
-def add_schedule():
+# Sample Data 
+"""
+{
+        "Location": "Japan",
+        "Date": "2024-07-21",
+        "Event": "Trip to Japan",
+        "End Time": "16:00:00",
+        "Start Time": "14:00:00",
+        "Status":"Pending",
+        "user_id": ""
+}
+"""
+@app.route('/add_schedule/<string:user_id>', methods=["POST"])
+def add_schedule(user_id):
     try:
         data = request.get_json()
         sched_name = data["Event"]
@@ -112,33 +125,94 @@ def add_schedule():
         date = data["Date"]
         loc = data["Location"]
         category = cg.predict_category(sched_name)[0]
-        data, count = supabase.table('countries').insert({
+        data = supabase.table('Schedule').insert({
             "Date": date, 
             "Start Time": start,
             "End Time": end,
             "Location": loc,
             "Event": sched_name,
-            "Category": category
+            "Category": category,
+            "user_id":  user_id,
+            "Status": "Pending"
             }).execute()
-        print(data)
-        return{"Success": "egegegrde"}
+        if data:
+            return jsonify({"message": "Schedule added successfully!"}), 200
+        else:
+            return jsonify({"error": "An error occured while adding schedule."}), 500
     except Exception as e:
          return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
-@app.route('/update_schedule', methods=['PUT'])
-def update_schedule():
-    pass
+"""
+Sample Data
+{
+	"initial": {
+				"Location": "Japan",
+        "Date": "2024-04-21",
+        "Event": "Trip to Japan",
+        "End Time": "16:00:00",
+        "Start Time": "14:00:00"
+	}, 
+	"new":{
+		"Location": "Japan",
+        "Date": "2024-07-24",
+        "Event": "Trip to Japan",
+        "End Time": "09:00:00",
+        "Start Time": "06:00:00"
+	}
+}
+"""
+def get_sched_id(u_id, data):
+    id = supabase.table("Schedule").select("sched_id").eq("user_id", u_id)\
+        .eq("Date", data["Date"])\
+        .eq("Event", data["Event"])\
+        .eq("Start Time", data["Start Time"])\
+        .eq("End Time", data["End Time"]).execute()
+    
+    sched_id = id.data[0]['sched_id']
+    return sched_id
 
-@app.route('/delete_schedule', methods=['DELETE'])
-def delete_schedule():
-    pass
+
+@app.route('/update_schedule/<string:user_id>', methods=['PUT'])
+def update_schedule(user_id):
+    try:
+        data = request.get_json()
+        init_data = data.get("initial")
+        sched_id = get_sched_id(user_id, init_data)
+        new_data = data.get("new")
+        data = supabase.table("Schedule").update({
+            "Date": new_data["Date"], 
+            "Start Time": new_data["Start Time"],
+            "End Time": new_data["End Time"], 
+            "Location": new_data["Location"]
+            }).eq("sched_id", sched_id).execute()
+        if data:
+            return jsonify({"message": "Schedule updated successfully!"}), 200
+        else:
+            return jsonify({"erro": "An error occure while updating schedule."}), 500
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
+
+"""
+Sample Data
+
+""" 
+    
+@app.route('/delete_schedule/<string:user_id>', methods=['DELETE'])
+def delete_schedule(user_id):
+    try:
+        data = request.get_json()
+        sched_id = get_sched_id(user_id, data)
+        response = supabase.table("Schedule").delete().eq("sched_id", sched_id).execute()
+        if response:
+            return jsonify({"message": "Schedule deleted successfully!"}), 200
+        else:
+            return jsonify({"message": "An error occured while deleting schedule."}), 500
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
 
 @app.route('/chat_with_belle', methods=["GET", "POST"])
 def  chat_with_belle():
-    pass
-
-@app.route('/save_convo', methods=["POST"])
-def save_convo():
+    # implement nlp model and return response
     pass
 
 
