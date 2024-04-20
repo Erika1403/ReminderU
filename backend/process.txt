@@ -15,7 +15,7 @@ will recommmend 2 similar schedules for the user, belle will ask the user if he/
 his wanted tasks on suggested dates or if not, what is his other option
 8. After user decided what to do, schedule will be added to database if criteria is met
 9. If rescheduling, check if the new schedule is available and if not use the recommendaion model again
-and repeat step 8
+and repeat step 8 (before using the endpoint for the particular CRUD function)
 10. If delete, just delete data from database
 11. If users have log in, schedule should save on local database for reminding of user, updating of schedule 
 should be done after loging in and before signing out
