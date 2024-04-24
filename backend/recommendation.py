@@ -103,7 +103,6 @@ def suggest_date(rc, free_sched, user_data):
         suggestions = []
         start_range, end_range = pt.get_time_range(time_day)
         for date, dday, ttime in sched_data:
-            print(date)
             if day == dday and ttime == time_day and (dt.time(date.hour, date.minute) == wanted_start):
                 if sched_can_be_plotted(sched_slots, date, wanted_start, wanted_end):
                     suggestions.append(date)
