@@ -8,7 +8,7 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.metrics import confusion_matrix
 # nltk.download('punkt')
 # nltk.download('wordnet')
@@ -85,20 +85,20 @@ tfidf_test = vectorizer.transform(X_test)
 NBayes = MultinomialNB()
 NBayes.fit(tfidf_train, y_train)
 
-# print("Accuracy:",NBayes.score(tfidf_test, y_test))
+print("Accuracy:",NBayes.score(tfidf_test, y_test))
 
-# Predict the labels
-# y_pred = NBayes.predict(tfidf_test)
+"""#Predict the labels
+y_pred = NBayes.predict(tfidf_test)
 
 # Print the Confusion Matrix
-# cm = confusion_matrix(y_test, y_pred)
-# print("Confusion Matrix\n")
-# print(cm)
+cm = confusion_matrix(y_test, y_pred)
+print("Confusion Matrix\n")
+print(cm)
 
 # Print the Classification Report
-# cr = classification_report(y_test, y_pred)
-# print("\n\nClassification Report\n")
-# print(cr)
+cr = classification_report(y_test, y_pred)
+print("\n\nClassification Report\n")
+print(cr)"""
 
 def predict_category(title):
     title_vector = vectorizer.transform([title])
