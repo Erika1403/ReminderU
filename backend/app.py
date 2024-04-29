@@ -6,6 +6,7 @@ import json
 import recommendation as rec
 import categorization as cg
 from datetime import datetime as dt
+import pandas as pd
 
 
 app = Flask(__name__)
@@ -39,17 +40,22 @@ class Schedule_Function(Resource):
     def get(self, user_id, sched_id):
         try:
             now = dt.now()
+            # Get all schedule where date is greater than today
             if sched_id == 0:
                 data = supabase.table("Schedule").select("Event, Date, Start Time, End Time, Location, Category")\
-                .eq("user_id", user_id).gt("Date", now.strftime(date_format)).execute()
+                .eq("user_id", user_id).gt("Date", now.strftime(date_format)).order("Date", desc=False).execute()
                 if data:
                     return data.data, 200
                 else:
                     return {"error": "Schedule not found"}, 404
-            
-            else:
-                # get individual schedule
-                return {"IDError": "ID not recognized"}
+            elif sched_id==1:
+                # Get all schedule, sched id should be 1
+                data = supabase.table("Schedule").select("Event, Date, Start Time, End Time, Location, Category")\
+                .eq("user_id", user_id).order("Date", desc=True).execute()
+                if data:
+                    return data.data, 200
+                else:
+                    return {"error": "Schedule not found"}, 404
         except Exception as e:  # Catch other general exceptions
             # Handle unexpected errors
                 return {"error": f"Unexpected error: {str(e)}"}, 500
@@ -127,20 +133,28 @@ class Schedule_Info(Resource):
             except Exception as e:
                 return {"error": f"Unexpected error: {str(e)}"}, 500
         elif purpose == 'availability':
+            # this code should have less than 30 past data
             try:
                 data = request.get_json()
-                if data and 'schedule_records' in data and 'new_schedule' in data:
-                    schedule_records = json.dumps(data['schedule_records'])
+                
+                if data:
+                    schedule_records = pd.DataFrame(data['schedule_records'])
                     new_schedule = data['new_schedule']
-            
+                    # schedule records should be separated to happened already and not yet happening
+                    # if happened already is more than 10, then recommend
+                    # else just get the user to reschedule it in his/her own
                     if len(schedule_records) >= 10:
-                        result = rec.recommend(file=schedule_records, user_data=new_schedule)
+                        if len(schedule_records) >= 30:
+                            past_data = schedule_records.head(30)
+                            result = rec.recommend(file=past_data, user_data=new_schedule)
+                        else:
+                            result = rec.recommend(file=schedule_records, user_data=new_schedule)
+                            
                         return result, 200
                     else: 
                         return {"message": "No recommendation can be made, lack of data"}, 200
             except Exception as e:
                 return {"error": f"Unexpected error: {str(e)}"}, 500
-            
         else:
             pass
 

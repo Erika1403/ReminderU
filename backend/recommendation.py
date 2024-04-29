@@ -24,7 +24,7 @@ date_format = "%Y-%m-%d"
 full_format = date_format + " " + format_string
 
 def recommend(file, user_data):
-    data = pd.DataFrame(json.loads(file))
+    data = file
     user_data["Category"] = cg.predict_category(user_data["Event"])[0]
     data = data._append(user_data, ignore_index=True)
     free_sched = get_free_sched(data[:-1], user_data)
@@ -50,10 +50,9 @@ def recommend(file, user_data):
         #print(top_rc)
         
         suggestions = suggest_date(rc=top_rc, free_sched=free_sched, user_data=user_data)
-        print(suggestions)
         return {
-            "First Suggestion": suggestions[0],
-            "Second Suggestion" : suggestions[1]
+            "First Suggestion": str(suggestions[0]),
+            "Second Suggestion" : str(suggestions[1])
         }
         
         

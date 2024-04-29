@@ -85,7 +85,7 @@ tfidf_test = vectorizer.transform(X_test)
 NBayes = MultinomialNB()
 NBayes.fit(tfidf_train, y_train)
 
-print("Accuracy:",NBayes.score(tfidf_test, y_test))
+#print("Accuracy:",NBayes.score(tfidf_test, y_test))
 
 """#Predict the labels
 y_pred = NBayes.predict(tfidf_test)
