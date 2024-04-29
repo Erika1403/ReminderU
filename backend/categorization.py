@@ -109,7 +109,9 @@ def predict_category(title):
 
 # For Testing only
 #ttl = input("Enter the Schedule Title: ")
-#predict_category(ttl)
+#while(ttl != "quit"):
+#    predict_category(ttl)
+#    ttl = input("Enter the Schedule Title: ")
 
 # features for recommendation
 # For Task Priority
@@ -117,7 +119,7 @@ def categorized_priority(category):
     priorities = ["High", "Average", "Low"]
     h_priori = ["Work", "Education", "Projects", "Appointments"]
     a_priori = ["Volunteer", "Financial", "Fitness"]
-    l_priori = ["Errands", "Travel", "Leisure"]
+    l_priori = ["Errands", "Leisure"]
     if category in  h_priori:
         return priorities[0]
     elif category in a_priori:

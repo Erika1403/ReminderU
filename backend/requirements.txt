@@ -10,3 +10,5 @@ nltk
 seaborn
 wordcloud
 scikit-learn
+torch
+spacy
