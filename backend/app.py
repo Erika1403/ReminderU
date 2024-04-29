@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask_restful import Resource, Api, reqparse, abort
+from flask_restful import Resource, Api, abort
 from supabase import Client, create_client
 from os import environ
 import json
@@ -13,11 +13,6 @@ api = Api(app)
 db_url = environ.get("DATABASE_URL")
 db_key = environ.get("DATABASE_KEY")
 supabase: Client = create_client(db_url, db_key)
-
-
-user_parser = reqparse.RequestParser()
-user_parser.add_argument('date', required=True)
-sched_parser = reqparse.RequestParser()
 
 
 time_format = "%H:%M:%S"
@@ -43,8 +38,10 @@ class User(Resource):
 class Schedule_Function(Resource):
     def get(self, user_id, sched_id):
         try:
+            now = dt.now()
             if sched_id == 0:
-                data = supabase.table("Schedule").select("Event, Date, Start Time, End Time, Location, Category").eq("user_id", user_id).execute()
+                data = supabase.table("Schedule").select("Event, Date, Start Time, End Time, Location, Category")\
+                .eq("user_id", user_id).gt("Date", now.strftime(date_format)).execute()
                 if data:
                     return data.data, 200
                 else:
@@ -97,7 +94,7 @@ class Schedule_Function(Resource):
             if data:
                 return {"message": "Schedule updated successfully!"}, 200
             else:
-                return {"error": "An error occure while updating schedule."}, 500
+                return {"error": "An error occured while updating schedule."}, 500
         except Exception as e:
             return {"error": f"Unexpected error: {str(e)}"}, 500
         
@@ -136,8 +133,11 @@ class Schedule_Info(Resource):
                     schedule_records = json.dumps(data['schedule_records'])
                     new_schedule = data['new_schedule']
             
-                    result = rec.recommend(file=schedule_records, user_data=new_schedule)
-                    return result, 200
+                    if len(schedule_records) >= 10:
+                        result = rec.recommend(file=schedule_records, user_data=new_schedule)
+                        return result, 200
+                    else: 
+                        return {"message": "No recommendation can be made, lack of data"}, 200
             except Exception as e:
                 return {"error": f"Unexpected error: {str(e)}"}, 500
             
