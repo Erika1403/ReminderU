@@ -1,14 +1,9 @@
 flask
-python-dotenv
 supabase
-gotrue
-auth
 pandas
 numpy
-matplotlib
 nltk
-seaborn
-wordcloud
 scikit-learn
 torch
 spacy
+flask_restful

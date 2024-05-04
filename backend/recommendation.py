@@ -16,6 +16,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from collections import Counter
 import datetime as dt
 from datetime import timedelta
+import random
 
 pd.options.mode.copy_on_write = True
 
@@ -239,7 +240,31 @@ def check_if_free(data, sched, free_sched):
         return True
     else: 
         return False
-    
+
+
+def create_reminder(event, start_time, end_time, location):
+    starters = ["Don't forget", "Friendly reminder", "A gentle nudge for you", "Coming up soon",
+                "It's almost time for",  "Just a quick note to", "You have an appointement for"]
+    time_phrases = ["at", "that starts at", "that kicks off at", "happening at", "clocking in at"]
+    end_phrases = ["wraps up by", "concludes at", "finishes off at"]
+    loc_phrases = ["in", "happening at", "located at"]
+    my_starter = random.choice(starters)
+    first_letter = event[0]
+    vowels = ['a', 'e', 'i', 'o', 'u']
+    if first_letter in vowels:
+        article = "an "
+    else:
+        article = "a "
+
+    if starters in ["A gentle nudge for you", "Don't forget", "Friendly reminder", "Coming up soon"]:
+        reminder = my_starter + " .You have " + article + event + " today" + random.choice(time_phrases) + start_time + "and " + random.choice(end_phrases) +" "+ end_time + " "+ random.choice(loc_phrases) + " " + location
+        return reminder
+    else: 
+        reminder = my_starter + " your " + event + " today " + random.choice(time_phrases) + " "+start_time + " and " + random.choice(end_phrases) +" "+ end_time + " "+ random.choice(loc_phrases) + " " + location
+        return reminder
+
+#create_reminder("Doctor's Appointment", "20:00", "23:00", "Laguna Doctor")
+
 # Sample Data
 #sched = pd.read_csv('sample_sched.csv')
 #json_sched = sched.to_json(orient='records')

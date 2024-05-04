@@ -5,7 +5,7 @@ from os import environ
 import json
 import recommendation as rec
 import categorization as cg
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta as td
 import pandas as pd
 
 
@@ -69,6 +69,11 @@ class Schedule_Function(Resource):
             date = data["Date"]
             loc = data["Location"]
             category = cg.predict_category(sched_name)[0]
+            # insert code for creating a text that will be spoken in alarm using the info of a schedule
+            reminder = rec.create_reminder(sched_name, start, end, loc)
+            time_object = dt.strptime(start, time_format)
+            new_time = time_object - td(minutes=30)
+            reminder_time = new_time.strftime(time_format)
             data = supabase.table('Schedule').insert({
                 "Date": date, 
                 "Start Time": start,
@@ -76,8 +81,9 @@ class Schedule_Function(Resource):
                 "Location": loc,
                 "Event": sched_name,
                 "Category": category,
+                "Reminder": reminder,
+                "Reminder Time": reminder_time,
                 "user_id":  user_id,
-                "Status": "Pending"
                 }).execute()
             if data:
                 return {"message": "Schedule added successfully!"}, 200
@@ -149,7 +155,7 @@ class Schedule_Info(Resource):
                             result = rec.recommend(file=past_data, user_data=new_schedule)
                         else:
                             result = rec.recommend(file=schedule_records, user_data=new_schedule)
-                            
+
                         return result, 200
                     else: 
                         return {"message": "No recommendation can be made, lack of data"}, 200
