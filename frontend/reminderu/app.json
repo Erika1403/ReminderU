@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "reminderu",
+    "name": "ReminderU",
     "slug": "reminderu",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/BELLLOGO.png",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -21,7 +21,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.akire14.reminderu"
     },
     "web": {
       "favicon": "./assets/favicon.png"
