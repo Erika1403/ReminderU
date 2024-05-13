@@ -7,15 +7,10 @@ import { useFonts } from 'expo-font';
 import { useUserContext } from '../UserContext';
 
 
-
-
-
 export default function HomePage() {
   const [isModalVisible, setIsModalVisible] =useState(false);
   const userData = useUserContext().userData;
   const schedToday = useUserContext().schedToday;
-  const schedData = useUserContext().schedData;
-  console.log(schedData);
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
   const [fontLoaded] = useFonts({

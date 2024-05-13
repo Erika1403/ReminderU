@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet } from 'react-native'
-import React from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, } from 'react-native'
+import React, {useState} from 'react'
 import { useFonts } from 'expo-font';
+import { Entypo } from '@expo/vector-icons';
 
 export default function ReminderCon({Title, Desc, STime, Date, Status}) {
     const [fontLoaded] = useFonts({
@@ -16,7 +17,7 @@ export default function ReminderCon({Title, Desc, STime, Date, Status}) {
             height: "auto",
             padding: 10,
             marginTop: 10,
-            backgroundColor:Status=="Pending"? '#B4D2FF':'#EDBBFA',
+            backgroundColor:Status=="Upcoming"? '#B4D2FF':'#EDBBFA',
             borderRadius: 10,}}>
             <View style={{marginBottom: 5}}>
               <Text style={styles.remTitle}>{Title}</Text>

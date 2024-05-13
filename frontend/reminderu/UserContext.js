@@ -4,7 +4,7 @@ export const UserContext = createContext();
 export const UserContextProvider = ({ children }) => {
     const [userData, setUserData] = useState(null);
     const [schedData, setSchedData] = useState("");
-    const [schedToday, setSchedToday] = useState({timeStr: '', Title: ''});
+    const [schedToday, setSchedToday] = useState([{timeStr: '', Title: 'You have no reminder for today!'}]);
     return (
       <UserContext.Provider value={{ userData, setUserData, schedData, setSchedData, schedToday, setSchedToday }}>
         {children}

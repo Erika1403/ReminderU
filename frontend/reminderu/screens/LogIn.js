@@ -34,6 +34,7 @@ export default function Login
         method: 'GET'
       });
       if (!response.ok) {
+        alert("Invalid Credentials");
         throw new Error(`API request failed with status ${response.status}`);
       }
       else {
@@ -64,7 +65,9 @@ export default function Login
 
           });
           setSchedData(data);
-          setSchedToday(currData);
+          if(currData !== null){
+            setSchedToday(currData);
+          }
         }
       }
     }

@@ -12,21 +12,18 @@ import Voice from '@react-native-voice/voice';
 
 export default function ConvoScreen() {
   const param = useRoute().params;
-
   //{ id: DateNow, messages: "Hello Belle!", user: true }, sample format
   //SAMPLE ONLY
   /**{ id: 1, messages: "Hello Belle!", user: true },
     { id: 2, messages: "Good to see you!, What can I assist you with?", user: false },  */
-  const BELLE_URL = 'http://10.0.2.2:5000/belle/07fd93bb-0f11-4782-980c-10647146f471';
-
+  const BELLE_URL = 'http://10.0.2.2:5000/belle/';
   const [showRecordButton, setShowRecordButton] = useState(false);
   const [count, setCount] = useState(1);
-  initialMessage = [{messages: param.Question, user: false, id: 0}];
-  const [message, setMessages] = useState(initialMessage);
+  const initialMessage = param;
+  const [message, setMessages] = useState([{id: param.id, messages: param.messages, user: param.user}]);
   const [currentMessage, setCurrentMessage] = useState('') 
   const [isDisabled, setIsDisabled] = useState(false);
   const [activeMic, setMicActive] = useState(false);
-  
   const requestMicPermission = async () => {
     if (Platform.OS === 'android'){
       try {
@@ -97,12 +94,17 @@ export default function ConvoScreen() {
       setIsDisabled(true);
     }
   };
-
   useEffect(() => {
     if (isDisabled) { // Only fetch when user is true
       fetchResponse(currentMessage);
     }
   }, [message]);
+  useEffect(() => {
+    if(initialMessage.user){
+      setIsDisabled(true);
+      fetchResponse(initialMessage.messages);
+    }
+  }, []);
 
   const fetchResponse = async (text) => {
     try {
@@ -117,11 +119,18 @@ export default function ConvoScreen() {
       if (!response.ok) {
         throw new Error(`API request failed with status ${response.status}`);
       }
-      const fetchedData = await response.json();
-      setCount(count+1);
-      const belleMessage = {messages: fetchedData["response"], user: false, id: count};
-      setIsDisabled(false);
-      setMessages([...message, belleMessage]);
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('error')){
+          console.log(fetchedData["error"]);
+        }
+        else {
+          setCount(count+1);
+          const belleMessage = {messages: fetchedData["response"], user: false, id: count};
+          setIsDisabled(false);
+          setMessages([...message, belleMessage]);
+        }
+      }
     } catch (error) {
       console.error('Error fetching data:', error);
     } 
