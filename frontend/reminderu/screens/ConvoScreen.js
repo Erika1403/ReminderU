@@ -12,19 +12,21 @@ import Voice from '@react-native-voice/voice';
 
 export default function ConvoScreen() {
   const param = useRoute().params;
-  //{ id: DateNow, messages: "Hello Belle!", user: true }, sample format
-  //SAMPLE ONLY
-  /**{ id: 1, messages: "Hello Belle!", user: true },
-    { id: 2, messages: "Good to see you!, What can I assist you with?", user: false },  */
   const BELLE_URL = 'http://10.0.2.2:5000/belle/';
   const [showRecordButton, setShowRecordButton] = useState(false);
   const [count, setCount] = useState(1);
   const initialMessage = param;
+  const [toUpdate, setToUpdate] = useState(false);
+  const [intent, setIntent] = useState("");
+  const [initSched, setInitSched] = useState([]);
+  const [delSched, setDelSched] = useState([]);
   const [message, setMessages] = useState([{id: param.id, messages: param.messages, user: param.user}]);
   const [currentMessage, setCurrentMessage] = useState('') 
   const [isDisabled, setIsDisabled] = useState(false);
   const [activeMic, setMicActive] = useState(false);
+  const [newsched, setNewSched] = useState([]);
   const requestMicPermission = async () => {
+    
     if (Platform.OS === 'android'){
       try {
         const granted = await PermissionsAndroid.request(
@@ -90,25 +92,49 @@ export default function ConvoScreen() {
       setCount(count+1);
       let data = { messages: currentMessage, user: true, id: count };
       setMessages([...message, data]);
-      setCurrentMessage('');
       setIsDisabled(true);
     }
   };
+  //Function for getting responses from API automatically
   useEffect(() => {
     if (isDisabled) { // Only fetch when user is true
       fetchResponse(currentMessage);
+      setCurrentMessage('');
+      console.log(currentMessage);
     }
   }, [message]);
+  // Function for getting responses if user does not clicked any of the buttons in chat screen
   useEffect(() => {
     if(initialMessage.user){
       setIsDisabled(true);
       fetchResponse(initialMessage.messages);
     }
   }, []);
-
+  //Function that should contain functions that will add data to database via API (Add, Update)
+  useEffect(() => {
+    if(newsched.length === 5 && intent === "Add"){
+      //Function to add schedule
+    }
+    else if(newsched.length < 1 && initSched === 2 && toUpdate){
+      //Function to remove schedule
+    }
+  }, [newsched]);
+  //Function that should contain functions that will delete data from database via API
+  useEffect(() => {
+  if(delSched.length === 3) {
+    //Function to delete schedule
+  }
+}, [delSched]);
+  //Function to fetch response/message from API
   const fetchResponse = async (text) => {
     try {
-      const data = {"message": text}
+      let data;
+      if(intent === ""){
+        data = {"message": text}
+      }
+      else{
+        data = {"message": text, "function":intent};
+      }
       const response = await fetch(BELLE_URL, {
         method: 'POST',
         headers: {
@@ -126,15 +152,66 @@ export default function ConvoScreen() {
         }
         else {
           setCount(count+1);
-          const belleMessage = {messages: fetchedData["response"], user: false, id: count};
+          const belleMessage = {messages: fetchedData["message"], user: false, id: count};
+          if(fetchedData.hasOwnProperty("function")){
+            //If the intent in NONE and the goal is to update, do a function
+            if(fetchedData["function"] === "None" && intent === "Update"){
+              setToUpdate(true);
+            }
+            //Update the function or goal of user
+            else {
+              setIntent(fetchedData["function"]);
+            }
+          }
+          //Collect the data from user
+          else if(fetchedData.hasOwnProperty("Date")){
+            let newS = {Date : fetchedData["Date"]};
+            updateSchedData(newS);
+          }
+          else if(fetchedData.hasOwnProperty("Start Time")){
+            let newS = {Start_Time : fetchedData["Start Time"]};
+            updateSchedData(newS);
+          }
+          else if(fetchedData.hasOwnProperty("Event")){
+            let newS = {Event : fetchedData["Event"]};
+            updateSchedData(newS);
+          }
+          else if(fetchedData.hasOwnProperty("End Time")){
+            let newS = {End_Time : fetchedData["End Time"]};
+            updateSchedData(newS);
+          }
+          else if(fetchedData.hasOwnProperty("Location")){
+            let newS = {Location : fetchedData["Location"]};
+            updateSchedData(newS);
+          }
           setIsDisabled(false);
           setMessages([...message, belleMessage]);
+          console.log(newsched);
         }
       }
     } catch (error) {
       console.error('Error fetching data:', error);
     } 
   };
+  //Function to filter what data to collect
+  const updateSchedData = (newS) => {
+    if(intent === "Update" && initSched.length < 2){
+      //Get the date and title of the event to change
+      setInitSched([...initSched, newS])
+    }
+    else if(intent === "Update" && initSched.length > 2){
+      // Get the info to change
+      setNewSched([...newsched, newS])
+    }
+    else if(intent === "Delete"){
+      //get the data about the sched to delete
+      setDelSched([...delSched, newS])
+    }
+    else {
+      //get the data about the new sched to add
+      setNewSched([...newsched, newS])
+    }
+  }
 
   const renderItem = ({item}) => (
     <MessageBubble message={item.messages} user={item.user} />
