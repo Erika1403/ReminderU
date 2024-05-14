@@ -37,16 +37,16 @@ export default function ChatScreen() {
           <Text style={styles.subtitle}>You can use talk to me or have a chat with me, whatever is convenient to you</Text>
         </View>
         <View style={styles.btn_containers}>
-          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0, messages: "What Schedule do you want to add?", user: false})} style={styles.choice_btn}>
+          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0, messages: "What Schedule do you want to add?", user: false, function: "Add"})} style={styles.choice_btn}>
             <Text style={styles.txt_btn}>Can you add a schedule for me?</Text>
           </TouchableHighlight>
-          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0,  Question: "What Schedule do you want to update?", user: false})} style={styles.choice_btn}>
+          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0,  messages: "What Schedule do you want to update?", user: false, function: "Update"})} style={styles.choice_btn}>
             <Text style={styles.txt_btn}>Can you update a schedule for me?</Text>
           </TouchableHighlight>
-          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0, Question: "What Schedule do you want to delete?", user: false})} style={styles.choice_btn}>
+          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0, messages: "What Schedule do you want to delete?", user: false, function: "Delete"})} style={styles.choice_btn}>
             <Text style={styles.txt_btn}>Can you delete a schedule for me?</Text>
           </TouchableHighlight>
-          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0, Question: "Which date would you like to check?", user: false})} style={styles.choice_btn}>
+          <TouchableHighlight activeOpacity={0.9} underlayColor="#DDDDDD" onPress={() => navigation.navigate("convo", {id:0, messages: "Which date would you like to check?", user: false, function: "Get"})} style={styles.choice_btn}>
             <Text style={styles.txt_btn}>Can you list my schedule?</Text>
           </TouchableHighlight>
         </View>

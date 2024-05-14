@@ -1,11 +1,12 @@
 import { View, Image, SafeAreaView, FlatList, StyleSheet, TextInput, TouchableOpacity, TouchableHighlight, TouchableWithoutFeedbackComponent } from 'react-native'
-import React, {useEffect, useState} from 'react'
+import React, {useContext, useEffect, useState} from 'react'
 import MessageBubble from '../components/MessageBubble';
 import sentimg from '../assets/Sent.png';
 import micImg from '../assets/Microphone.png';
 import { useRoute } from '@react-navigation/native';
 import {PermissionsAndroid, Platform} from 'react-native';
 import Voice from '@react-native-voice/voice';
+import { useUserContext } from '../UserContext';
 
 
 
@@ -13,6 +14,11 @@ import Voice from '@react-native-voice/voice';
 export default function ConvoScreen() {
   const param = useRoute().params;
   const BELLE_URL = 'http://10.0.2.2:5000/belle/';
+  const SchedInfo_URL = 'http://10.0.2.2:5000/get_info/';
+  const SchedFunc_URL = 'http://10.0.2.2:5000/function/'
+  const userData = useUserContext().userData;
+  const schedData = useUserContext().schedData;
+  const [hasStartTime, setHasStartTime] = useState(false);
   const [showRecordButton, setShowRecordButton] = useState(false);
   const [count, setCount] = useState(1);
   const initialMessage = param;
@@ -97,7 +103,7 @@ export default function ConvoScreen() {
   };
   //Function for getting responses from API automatically
   useEffect(() => {
-    if (isDisabled) { // Only fetch when user is true
+    if (isDisabled && currentMessage.trim() !== '') { // Only fetch when user is true
       fetchResponse(currentMessage);
       setCurrentMessage('');
       console.log(currentMessage);
@@ -109,28 +115,115 @@ export default function ConvoScreen() {
       setIsDisabled(true);
       fetchResponse(initialMessage.messages);
     }
+    else {
+      setIntent(initialMessage.function);
+    }
   }, []);
   //Function that should contain functions that will add data to database via API (Add, Update)
   useEffect(() => {
-    if(newsched.length === 5 && intent === "Add"){
+    if((newsched.length === 5) && intent === "Add"){
       //Function to add schedule
+      console.log("Adding Schedule...");
+      checkAvailability();
     }
     else if(newsched.length < 1 && initSched === 2 && toUpdate){
       //Function to remove schedule
+      console.log("Updating Schedule...");
     }
   }, [newsched]);
   //Function that should contain functions that will delete data from database via API
   useEffect(() => {
   if(delSched.length === 3) {
     //Function to delete schedule
+    console.log("Deleting Schedule...");
   }
 }, [delSched]);
+
+  const formatSched = (data) => {
+    let nData= {};
+    data.forEach(element => {
+      Object.assign(nData, element);
+    });
+    return nData;
+  };
+  const addSchedule = async () => {
+    try{
+      let url = SchedFunc_URL + userData.user_id+ "/0";
+      const iData = formatSched(newsched);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(iData)
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('message')){
+          setCount(count+1);
+          const belleMessage = {messages: fetchedData["message"], user: false, id: count};
+          setMessages([...message, belleMessage]);
+        }
+        else if(fetchedData.hasOwnProperty('error')) {
+          alert(fetchedData["error"]);
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+      return false;
+    }
+  }
+
+  const checkAvailability = async () => {
+    try{
+      let url = SchedInfo_URL + userData.user_id  + "/availability" ;
+      const iData = formatSched(newsched);
+      let data = {"schedule_records" : schedData, "new_schedule": iData};
+      console.log(data);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('available')){
+          addSchedule();
+          setNewSched([]);
+        }
+        else if(fetchedData.hasOwnProperty('First Suggestion')) {
+          // print message about suggestion;
+          setCount(count+1);
+          const belleMessage = {messages: "The event cannot be added to your schedule because of conflicts! I recommend that you move your schedule at "+ fetchedData["First Suggestion"] + " or at "+ fetchedData["Second Suggestion"] + ".", user: false, id: count};
+          setMessages([...message, belleMessage]);
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+      return false;
+    }
+  };
+
   //Function to fetch response/message from API
   const fetchResponse = async (text) => {
     try {
       let data;
+      console.log(hasStartTime);
       if(intent === ""){
         data = {"message": text}
+      }
+      else if(hasStartTime){
+        data = {"message": text, "function":intent, "time_type": 1};
       }
       else{
         data = {"message": text, "function":intent};
@@ -161,30 +254,38 @@ export default function ConvoScreen() {
             //Update the function or goal of user
             else {
               setIntent(fetchedData["function"]);
+              setIsDisabled(false);
             }
           }
           //Collect the data from user
           else if(fetchedData.hasOwnProperty("Date")){
-            let newS = {Date : fetchedData["Date"]};
+            let newS = {"Date" : fetchedData["Date"]};
             updateSchedData(newS);
+            setIsDisabled(false);
           }
           else if(fetchedData.hasOwnProperty("Start Time")){
-            let newS = {Start_Time : fetchedData["Start Time"]};
+            let newS = {"Start_Time" : fetchedData["Start Time"] + ":00"};
             updateSchedData(newS);
+            setHasStartTime(true);
+            setIsDisabled(false);
           }
           else if(fetchedData.hasOwnProperty("Event")){
-            let newS = {Event : fetchedData["Event"]};
+            let newS = {"Event" : fetchedData["Event"]};
             updateSchedData(newS);
+            setIsDisabled(false);
           }
           else if(fetchedData.hasOwnProperty("End Time")){
-            let newS = {End_Time : fetchedData["End Time"]};
+            let newS = {"End_Time" : fetchedData["End Time"] + ":00"};
             updateSchedData(newS);
+            setIsDisabled(false);
           }
           else if(fetchedData.hasOwnProperty("Location")){
-            let newS = {Location : fetchedData["Location"]};
+            let newS = {"Location" : fetchedData["Location"]};
             updateSchedData(newS);
+            setIntent("");
+            setIsDisabled(false);
           }
-          setIsDisabled(false);
+          
           setMessages([...message, belleMessage]);
           console.log(newsched);
         }
@@ -270,7 +371,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
     flexDirection: 'row',
-    marginTop: 60,
+    marginTop: 20,
     marginBottom: 30,
   },
   input_container:{

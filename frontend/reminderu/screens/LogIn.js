@@ -48,6 +48,7 @@ export default function Login
           fetchedData.forEach(element => {
 
             const sched = {
+              sched_id: element["sched_id"],
               Event: element["Event"], 
               Date: element["Date"],
               Start_Time: element["Start Time"],
