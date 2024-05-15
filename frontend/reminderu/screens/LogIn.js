@@ -3,6 +3,7 @@ import React, { useEffect, useState , useContext} from 'react';
 import { useFonts } from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 import { useUserContext } from '../UserContext';
+import REMINDERU_URL from '../API_ENDPOINTS';
 
 
 
@@ -12,15 +13,12 @@ export default function Login
   const [User_Password, setPassword] = useState('');
   const {setUserData, setSchedData, setSchedToday} = useUserContext();
   const userData = useUserContext().userData;
-  const schedToday = useUserContext().schedToday;
   const navigation = useNavigation();
   
   const [fontLoaded] = useFonts({
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
     'Rum_Raisin':require('../fonts/RumRaisin-Regular.ttf'),
 });
-  const USER_URL = "http://10.0.2.2:5000/user/";
-  const SCHED_URL = "http://10.0.2.2:5000/function/";
   useEffect(()=>{
     if(userData !== null){
       getAllSchedule();
@@ -29,7 +27,7 @@ export default function Login
 
   const getAllSchedule = async () => {
     try{
-      let url = SCHED_URL + userData.user_id + "/1" ;
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id + "/1" ;
       const response = await fetch(url, {
         method: 'GET'
       });
@@ -78,7 +76,7 @@ export default function Login
   };
   const checkCredentials = async () => {
     try{
-      let url = USER_URL + User_Email + "/" + User_Password+ "/signin" ;
+      let url = REMINDERU_URL.USER_URL + User_Email + "/" + User_Password+ "/signin" ;
       const response = await fetch(url, {
         method: 'GET'
       });

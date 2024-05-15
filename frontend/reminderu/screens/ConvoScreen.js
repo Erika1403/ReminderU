@@ -7,15 +7,13 @@ import { useRoute } from '@react-navigation/native';
 import {PermissionsAndroid, Platform} from 'react-native';
 import Voice from '@react-native-voice/voice';
 import { useUserContext } from '../UserContext';
+import REMINDERU_URL from '../API_ENDPOINTS';
 
 
 
 
 export default function ConvoScreen() {
   const param = useRoute().params;
-  const BELLE_URL = 'http://10.0.2.2:5000/belle/';
-  const SchedInfo_URL = 'http://10.0.2.2:5000/get_info/';
-  const SchedFunc_URL = 'http://10.0.2.2:5000/function/'
   const userData = useUserContext().userData;
   const schedData = useUserContext().schedData;
   const [hasStartTime, setHasStartTime] = useState(false);
@@ -101,6 +99,7 @@ export default function ConvoScreen() {
       setIsDisabled(true);
     }
   };
+
   //Function for getting responses from API automatically
   useEffect(() => {
     if (isDisabled && currentMessage.trim() !== '') { // Only fetch when user is true
@@ -109,6 +108,7 @@ export default function ConvoScreen() {
       console.log(currentMessage);
     }
   }, [message]);
+
   // Function for getting responses if user does not clicked any of the buttons in chat screen
   useEffect(() => {
     if(initialMessage.user){
@@ -119,6 +119,7 @@ export default function ConvoScreen() {
       setIntent(initialMessage.function);
     }
   }, []);
+
   //Function that should contain functions that will add data to database via API (Add, Update)
   useEffect(() => {
     if((newsched.length === 5) && intent === "Add"){
@@ -131,13 +132,101 @@ export default function ConvoScreen() {
       console.log("Updating Schedule...");
     }
   }, [newsched]);
+
+  useEffect(() => {
+    if(toUpdate){
+      //Find the sched_id of schedule to update
+      let sched_id = getID(initSched);
+      if(!sched_id){
+        // Say to user that there is no schedule like that
+        setCount(count+1);
+        const belleMessage = {messages: "No event with this title on that day was found!", user: false, id: count};
+        setMessages([...message, belleMessage]);
+      }
+      else {
+        //Update the schedule
+        updateSchedule();
+        setIntent("");
+        setInitSched([]);
+        setNewSched([]);
+      }
+    }
+  }, [toUpdate]);
+
   //Function that should contain functions that will delete data from database via API
   useEffect(() => {
-  if(delSched.length === 3) {
-    //Function to delete schedule
-    console.log("Deleting Schedule...");
-  }
-}, [delSched]);
+    if(delSched.length === 3) {
+      //Function to delete schedule
+      console.log("Deleting Schedule...");
+    }
+  }, [delSched]);
+
+  const updateSchedule = async (id) => {
+    try{
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id  + "/0" ;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('message')){
+          // Inform user
+          setCount(count+1);
+          const belleMessage = {messages: fetchedData["message"], user: false, id: count};
+          setMessages([...message, belleMessage]);
+        }
+        else if(fetchedData.hasOwnProperty('error')) {
+          //Inform user
+          setCount(count+1);
+          const belleMessage = {messages: fetchedData["error"], user: false, id: count};
+          setMessages([...message, belleMessage]);
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+      return false;
+    }
+  };
+
+  const getID = async (sched_data) => {
+    //Get the id of the schedule to update
+    try{
+      let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/get_id" ;
+      const data = formatSched(sched_data);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('sched_id')){
+          console.log(fetchedData["sched_id"]);
+          return fetchedData["sched_id"];
+        }
+        else if(fetchedData.hasOwnProperty('error')) {
+          return false;
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+      return false;
+    }
+  };
 
   const formatSched = (data) => {
     let nData= {};
@@ -148,7 +237,7 @@ export default function ConvoScreen() {
   };
   const addSchedule = async () => {
     try{
-      let url = SchedFunc_URL + userData.user_id+ "/0";
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id+ "/0";
       const iData = formatSched(newsched);
       const response = await fetch(url, {
         method: 'POST',
@@ -180,7 +269,7 @@ export default function ConvoScreen() {
 
   const checkAvailability = async () => {
     try{
-      let url = SchedInfo_URL + userData.user_id  + "/availability" ;
+      let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/availability" ;
       const iData = formatSched(newsched);
       let data = {"schedule_records" : schedData, "new_schedule": iData};
       console.log(data);
@@ -228,7 +317,7 @@ export default function ConvoScreen() {
       else{
         data = {"message": text, "function":intent};
       }
-      const response = await fetch(BELLE_URL, {
+      const response = await fetch(REMINDERU_URL.BELLE_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -250,6 +339,7 @@ export default function ConvoScreen() {
             //If the intent in NONE and the goal is to update, do a function
             if(fetchedData["function"] === "None" && intent === "Update"){
               setToUpdate(true);
+              console.log("Should update");
             }
             //Update the function or goal of user
             else {
@@ -285,9 +375,16 @@ export default function ConvoScreen() {
             setIntent("");
             setIsDisabled(false);
           }
-          
+          else {
+            setIsDisabled(false);
+          }
           setMessages([...message, belleMessage]);
+          console.log("NewSched");
           console.log(newsched);
+          console.log("InitSched");
+          console.log(initSched);
+          console.log("DelSched");
+          console.log(delSched);
         }
       }
     } catch (error) {
