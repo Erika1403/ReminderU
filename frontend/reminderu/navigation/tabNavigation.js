@@ -8,6 +8,7 @@ import { useFonts } from "expo-font";
 import ProfileAboutNav from "./ProfileAboutNav";
 import { useRoute } from '@react-navigation/native';
 import ReminderNav from "./ReminderNav";
+import AddNav from "./AddNav";
 
 
 
@@ -56,7 +57,7 @@ export default function TabNavigation() {
           }}
           />
          
-          <Tab.Screen name="BELLE" component={StartChatNav}  
+          <Tab.Screen name="ADD" component={AddNav}  
           options={{
             headerShown:false,
             tabBarIcon: ({focused}) => (
@@ -72,6 +73,7 @@ export default function TabNavigation() {
               <Entypo name="bell"  color={focused ? '#3D405B' : '#fff'} size={25}/>
             ),
             headerShown: false,
+            tabBarStyle: {display: 'none'},
           }}/>
   
           <Tab.Screen name="PROFILE" component={ProfileAboutNav} 

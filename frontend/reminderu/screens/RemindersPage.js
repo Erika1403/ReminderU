@@ -115,7 +115,7 @@ export default function RemindersPage({navigation}) {
         <View ><DropdownComponent/></View>
       </View>
   
-      <FlatList style={{ maxHeight: 540, padding: 20}} 
+      <FlatList style={{ maxHeight: 600, padding: 20, paddingBottom: 0}} 
       data={mysched}
       renderItem={renderItem}
       keyExtractor={(item) => item.id.toString()}

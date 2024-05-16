@@ -1,14 +1,15 @@
 import React from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import RemindersPage from '../screens/RemindersPage';
 import { useFonts } from 'expo-font';
 import CustomBackButton from '../components/CustomBackBtn';
-import EditReminder from '../screens/EditReminderScreen';
+import NewReminder from '../screens/NewReminderScreen';
+import StartChatNav from './StartChatNav';
+import AddReminderPage from '../screens/AddReminderPage';
 
 
 const Stack=createNativeStackNavigator();
 
-export default function ReminderNav() {
+export default function AddNav() {
   const [fontLoaded] = useFonts({
     'Poppins_Black': require('../fonts/Poppins-Black.ttf'),
 });
@@ -16,10 +17,12 @@ export default function ReminderNav() {
     return (
       <Stack.Navigator screenOptions={{
       headerLeft: () => <CustomBackButton />}} initialRouteName='reminder'>
-          <Stack.Screen name='reminder' component={RemindersPage} options={{title: 'REMINDERS',
+          <Stack.Screen name='add' component={AddReminderPage} options={{title: 'ADD REMINDER',
             headerTitleStyle:{ fontSize: 27, color: '#B7B8FF', fontFamily: 'Poppins_Black'},
             headerTitleAlign: 'center'}}/>
-          <Stack.Screen name='edit' component={EditReminder} options={{title: 'EDIT', headerTitleAlign: 'center', 
+          <Stack.Screen name='new' component={NewReminder} options={{title: 'NEW', headerTitleAlign: 'center', 
+            headerTitleStyle: {fontFamily: 'Poppins_Black', color: '#C999D6'}, }}/>
+          <Stack.Screen name='chat' component={StartChatNav} options={{title: 'BELLE', headerTitleAlign: 'center', 
             headerTitleStyle: {fontFamily: 'Poppins_Black', color: '#C999D6'}, }}/>
       </Stack.Navigator>
     )
