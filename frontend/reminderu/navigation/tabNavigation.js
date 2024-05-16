@@ -7,6 +7,7 @@ import { Ionicons, Entypo } from '@expo/vector-icons';
 import { useFonts } from "expo-font";
 import ProfileAboutNav from "./ProfileAboutNav";
 import { useRoute } from '@react-navigation/native';
+import ReminderNav from "./ReminderNav";
 
 
 
@@ -65,13 +66,12 @@ export default function TabNavigation() {
             tabBarStyle: {display: 'none'},
           }}/>
   
-          <Tab.Screen name="REMINDERS" component={RemindersPage}  
+          <Tab.Screen name="REMINDERS" component={ReminderNav}  
           options={{
-            headerTitleStyle:{ fontSize: 27, color: '#B7B8FF', fontFamily: 'Poppins_Black'},
-            headerTitleAlign: 'center',
             tabBarIcon: ({focused}) => (
               <Entypo name="bell"  color={focused ? '#3D405B' : '#fff'} size={25}/>
-            )
+            ),
+            headerShown: false,
           }}/>
   
           <Tab.Screen name="PROFILE" component={ProfileAboutNav} 

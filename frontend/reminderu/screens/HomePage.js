@@ -1,16 +1,21 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, ScrollView } from 'react-native'
-import { useContext, useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, FlatList, ScrollView} from 'react-native'
+import { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import moment from 'moment';
+import { FontAwesome5, MaterialIcons, Entypo } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { useUserContext } from '../UserContext';
 
 
 export default function HomePage() {
-  const [isModalVisible, setIsModalVisible] =useState(false);
+  const [isModalVisible_U, setIsModalVisibleU] =useState(false);
+  const [isModalVisible_C, setIsModalVisibleC] =useState(false);
+  const [mysched_U, setSchedDateU] = useState(null);
+  const [mysched_C, setSchedDateC] = useState(null);
   const userData = useUserContext().userData;
+  const schedData = useUserContext().schedData;
   const schedToday = useUserContext().schedToday;
+  const moment = require('moment-timezone');
+  const philippinesTimeZone = 'Asia/Manila';
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
   const [fontLoaded] = useFonts({
@@ -20,6 +25,80 @@ export default function HomePage() {
     'RumRaisin': require('../fonts/RumRaisin-Regular.ttf'),
     'Poppins_Bold': require('../fonts/Poppins-Bold.ttf'),
 });
+useEffect(() => {
+  if(schedData && schedData.length > 0){
+    const result = formatData();
+    setSchedDateU(result.tempU);
+    setSchedDateC(result.tempC);
+  }
+}, [schedData]);
+
+const formatData = () => {
+  let tempU = [];
+  let tempC = [];
+  let origDate = new Date();
+  const utcMoment = moment(origDate);
+  const date_t = utcMoment.tz(philippinesTimeZone);
+  const dateToday = new Date(date_t);
+  const options = { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  };
+  let i = 0;
+  schedData.forEach(element => {
+    let thedate = element.Date + " " + element.Start_Time;
+    let currdate_o = moment.tz(thedate, philippinesTimeZone);
+    const currdate = currdate_o.utc();
+    const formattedDate = new Date(currdate).toLocaleDateString('en-US', options);
+    if(dateToday > currdate){
+      let thedata = {id: i, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
+      tempC.push(thedata);
+    }
+    else if (dateToday <= currdate){
+      let thedata = {id: i, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
+      tempU.push(thedata);
+    }
+    i++;
+  });
+  return {tempC, tempU};
+};
+function convertToAMPM(timeString) {
+  const [hours, minutes, seconds] = timeString.split(':');
+  let hours12 = parseInt(hours, 10);
+  const suffix = hours12 >= 12 ? 'PM' : 'AM';
+  
+  // Convert hours to 12-hour format
+  hours12 = hours12 % 12 || 12;
+
+  // Add leading zeros to minutes if necessary
+  const paddedMinutes = minutes.padStart(2, '0');
+
+  return `${hours12}:${paddedMinutes} ${suffix}`;
+}
+const renderItem = ({item}) => (
+  <View style={{
+    height: "auto",
+    padding: 10,
+    marginTop: 10,
+    marginLeft: 10,
+    marginRight: 10,
+    backgroundColor:item.Status=="Upcoming"? '#B4D2FF':'#EDBBFA',
+    borderRadius: 10,}}>
+    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+    <View style={{marginBottom: 5}}>
+      <Text style={styles.remTitle2}>{item.Title}</Text>
+      <Text style={styles.remDesc}>{item.Desc}</Text>
+    </View>
+    </View>
+    <View style={styles.footerCon}>
+        <Text style={styles.Time}>{item.STime}</Text>
+        <Text style={styles.Date}>{item.Date}</Text>
+        <Text style={styles.Category}>{item.Status}</Text>
+    </View>
+    </View>
+);
+
   if (!fontLoaded){
     return undefined;
   }
@@ -56,21 +135,33 @@ export default function HomePage() {
       
   
       <View style={{alignItems: 'center', flexDirection: 'row', justifyContent: 'space-evenly'}}>
-        <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+        <TouchableOpacity onPress={() => setIsModalVisibleC(true)}>
           <View style={{width: 60, height: 60, backgroundColor: '#EDBBFA', borderRadius:10, justifyContent: 'center', alignItems: 'center'}}>
           <FontAwesome5 name="check" size={26} color="#fff" />
   
-          <Modal visible={isModalVisible} 
-                onRequestClose={() => setIsModalVisible(false)}
+          <Modal visible={isModalVisible_C} 
+                onRequestClose={() => setIsModalVisibleC(false)}
                 transparent={true}
                 animationType='slide'
                >
             <View style={styles.modalContainer}>
             <View style={styles.CompRemModal}>
               <Text style={{fontSize:20, fontWeight:'bold', color:'#3D405B'}}>COMPLETED REMINDERS</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+              <TouchableOpacity onPress={() => setIsModalVisibleC(false)}>
               <MaterialIcons name="keyboard-arrow-down" size={25} color= '#3D405B'/>
               </TouchableOpacity>
+
+              <View style={{flex: 1, width: '100%'}}>
+              <FlatList
+              data={mysched_C}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{
+                paddingTop: 10,
+                paddingBottom: 10,
+              }}/>
+              </View>
+
             </View>
             </View>
           </Modal>
@@ -78,20 +169,31 @@ export default function HomePage() {
           <Text style={styles.remTitle}>COMPLETED</Text>
         </TouchableOpacity>
   
-        <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+        <TouchableOpacity onPress={() => setIsModalVisibleU(true)}>
           <View style={{width: 60, height: 60, backgroundColor: '#B4D2FF', borderRadius:10, justifyContent: 'center', alignItems: 'center'}}>
           <FontAwesome5 name="clock" size={26} color="#fff" />
-          <Modal visible={isModalVisible} 
-                onRequestClose={() => setIsModalVisible(false)}
+          <Modal visible={isModalVisible_U} 
+                onRequestClose={() => setIsModalVisibleU(false)}
                 transparent={true}
                 animationType='slide'
                >
             <View style={styles.modalContainer}>
             <View style={styles.CompRemModal}>
               <Text style={{fontSize:20, fontWeight:'bold', color:'#3D405B'}}>UPCOMING REMINDERS</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+              <TouchableOpacity onPress={() => setIsModalVisibleU(false)}>
               <MaterialIcons name="keyboard-arrow-down" size={25} color= '#3D405B'/>
               </TouchableOpacity>
+
+              <View style={{ flex: 1, width: '100%'}}>
+              <FlatList
+              data={mysched_U}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={{
+                padding: 10
+              }}/>
+              </View>
+
             </View>
             </View>
           </Modal>
@@ -247,4 +349,39 @@ const styles = StyleSheet.create({
     borderTopRightRadius:20,
     padding:20,
   },
+  remTitle2:{
+    fontSize: 15,
+    fontFamily: 'Poppins_ExtraBold',
+    color: '#3D405B',
+},
+remDesc: {
+    fontSize: 13,
+    fontFamily: 'Poppins_SemiBold',
+    color: '#fff'
+},
+footerCon:{
+    marginTop:5,
+    borderTopWidth:2,
+    borderTopColor: 'gray',
+    flexDirection: 'row',
+
+},
+Time: {
+    fontSize: 18,
+    fontFamily: 'Poppins_SemiBold',
+    color: '#3D405B',
+    marginTop: 3,
+    marginRight: 10,
+},
+Date: {
+    fontFamily: 'Poppins_SemiBold',
+    color: '#908D8D',
+    marginTop: 5,
+    marginRight: 60,
+},
+Category:{
+    fontFamily: 'Poppins_SemiBold',
+    color: '#908D8D',
+    marginTop: 5,
+},
 })

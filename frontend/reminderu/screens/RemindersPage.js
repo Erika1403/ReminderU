@@ -1,51 +1,65 @@
-import { View, Text, StyleSheet, Modal, FlatList, TouchableHighlight, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import DropdownComponent from '../components/DropdownComponent'
 import { useFonts } from 'expo-font';
-import { MaterialIcons, Entypo } from '@expo/vector-icons';
-import moment from 'moment';
-import { useUserContext } from '../UserContext'
+import { Entypo } from '@expo/vector-icons';
+import { useUserContext } from '../UserContext';
 
-export default function RemindersPage() {
-  const [isModalVisible, setIsModalVisible] =useState(false);
+
+export default function RemindersPage({navigation}) {
   const [fontLoaded] = useFonts({
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
     'RumRaisin': require('../fonts/RumRaisin-Regular.ttf'),
+    'Poppins': require('../fonts/Poppins-Regular.ttf'),
 });
+  const moment = require('moment-timezone');
+  
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
   const schedData = useUserContext().schedData;
   const [mysched, setSchedDate] = useState(null);
+  const philippinesTimeZone = 'Asia/Manila';
+  
+  const handleItemPressed = (item) => {
+    navigation.navigate('edit', item);
+  }
+
+
   useEffect(() => {
     const temp = formatData();
     setSchedDate(temp);
   }, [schedData]);
+
   const formatData = () => {
     let temp = [];
-    const dateToday = new Date();
+    let origDate = new Date();
+    const utcMoment = moment(origDate);
+    const date_t = utcMoment.tz(philippinesTimeZone);
+    const dateToday = new Date(date_t);
     const options = { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
-  };
+    };
   let i = 0;
-    schedData.forEach(element => {
-      let currdate = new Date(element.Date);
-      console.log(currdate)
-      const formattedDate =currdate.toLocaleDateString('en-US', options);
-      if(dateToday > currdate){
-        let thedata = {id: i, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
-        temp.push(thedata);
-      }
-      else if (dateToday <= currdate){
-        let thedata = {id: i, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
-        temp.push(thedata);
-      }
-      i++;
-    });
+  schedData.forEach(element => {
+    let thedate = element.Date + " " + element.Start_Time;
+    let currdate_o = moment.tz(thedate, philippinesTimeZone);
+    const currdate = currdate_o.utc();
+    const formattedDate = new Date(currdate).toLocaleDateString('en-US', options);
+    if(dateToday > currdate){
+      let thedata = {id: i, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time), ETime: convertToAMPM(element.End_Time), Location: element.Location};
+      temp.push(thedata);
+    }
+    else if (dateToday <= currdate){
+      let thedata = {id: i, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time), ETime: convertToAMPM(element.End_Time), Location: element.Location};
+      temp.push(thedata);
+    }
+    i++;
+  });
     return temp;
-  };
+};
   function convertToAMPM(timeString) {
     const [hours, minutes, seconds] = timeString.split(':');
     let hours12 = parseInt(hours, 10);
@@ -59,6 +73,8 @@ export default function RemindersPage() {
 
     return `${hours12}:${paddedMinutes} ${suffix}`;
 }
+
+ 
   const renderItem = ({item}) => (
     <View style={{
       height: "auto",
@@ -71,7 +87,7 @@ export default function RemindersPage() {
         <Text style={styles.remTitle2}>{item.Title}</Text>
         <Text style={styles.remDesc}>{item.Desc}</Text>
       </View>
-      <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+      <TouchableOpacity onPress={() => handleItemPressed(item)}>
           <Entypo name="edit" color={'#3D405B'} size={25}/>
       </TouchableOpacity>
       </View>
@@ -108,20 +124,6 @@ export default function RemindersPage() {
         paddingBottom: 10,
       }}
       />
-      <Modal visible={isModalVisible} 
-                onRequestClose={() => setIsModalVisible(false)}
-                transparent={true}
-                animationType='slide'
-               >
-        <View style={styles.modalContainer}>
-          <View style={styles.CompRemModal}>
-            <Text style={{fontSize:20, fontWeight:'bold', color:'#3D405B'}}>EDIT REMINDERS</Text>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                <MaterialIcons name="keyboard-arrow-down" size={25} color= '#3D405B'/>
-              </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
       </SafeAreaView>
     )
   }
@@ -206,4 +208,57 @@ Category:{
     color: '#908D8D',
     marginTop: 5,
 },
+centeredView: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginTop: 22,
+},
+modalView: {
+  margin: 20,
+  backgroundColor: 'white',
+  borderRadius: 20,
+  borderColor: 'purple',
+  width: '90%',
+  padding: 35,
+  alignItems: 'center',
+  shadowColor: '#000',
+  shadowOffset: {
+      width: 0,
+      height: 2
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 4,
+  elevation: 5,
+},
+sub_title: {
+  fontSize: 18, 
+  fontFamily: 'Poppins_SemiBold',
+  color: '#3D405B',
+},
+sub_input: {
+  fontSize: 16, 
+  fontFamily: 'Poppins', 
+  color: 'black', 
+  borderColor: 'black', 
+  borderWidth: 1, 
+  padding: 4
+},
+input_DOB: {
+  height: 40, 
+  width: '90%',
+  padding: 10,
+  borderWidth: 1,
+  borderRadius: 10,
+  borderColor: '#D9D9D9CC',
+  backgroundColor: '#ffffff',
+  fontFamily: 'Poppins_SemiBold',
+  marginBottom: 30,
+},
+time_picker: {
+  width: '100%', 
+  backgroundColor: 'pink',
+  height: 30,
+  
+}
 })

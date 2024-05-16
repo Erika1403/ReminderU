@@ -195,7 +195,6 @@ const styles = StyleSheet.create({
       backgroundColor: '#ffffff',
       fontFamily: 'Poppins_SemiBold',
       marginBottom: 30,
-      
     },
     Calendar_style: {
       height: 40, 

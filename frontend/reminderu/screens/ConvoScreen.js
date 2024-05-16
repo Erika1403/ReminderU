@@ -16,6 +16,7 @@ export default function ConvoScreen() {
   const param = useRoute().params;
   const userData = useUserContext().userData;
   const schedData = useUserContext().schedData;
+  const {setSchedData, setSchedToday} = useUserContext();
   const [hasStartTime, setHasStartTime] = useState(false);
   const [showRecordButton, setShowRecordButton] = useState(false);
   const [count, setCount] = useState(1);
@@ -136,26 +137,13 @@ export default function ConvoScreen() {
   useEffect(() => {
     if(toUpdate){
       //Find the sched_id of schedule to update
-      let sched_id = getID(initSched);
-      if(!sched_id){
-        // Say to user that there is no schedule like that
-        setCount(count+1);
-        const belleMessage = {messages: "No event with this title on that day was found!", user: false, id: count};
-        setMessages([...message, belleMessage]);
-      }
-      else {
-        //Update the schedule
-        updateSchedule();
-        setIntent("");
-        setInitSched([]);
-        setNewSched([]);
-      }
+      getID(initSched, "Update");
     }
   }, [toUpdate]);
 
   //Function that should contain functions that will delete data from database via API
   useEffect(() => {
-    if(delSched.length === 3) {
+    if(delSched.length === 2) {
       //Function to delete schedule
       console.log("Deleting Schedule...");
     }
@@ -163,7 +151,8 @@ export default function ConvoScreen() {
 
   const updateSchedule = async (id) => {
     try{
-      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id  + "/0" ;
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id  + "/"+id ;
+      const data = formatSched(newsched);
       const response = await fetch(url, {
         method: 'PUT',
         headers: {
@@ -181,6 +170,7 @@ export default function ConvoScreen() {
           setCount(count+1);
           const belleMessage = {messages: fetchedData["message"], user: false, id: count};
           setMessages([...message, belleMessage]);
+          refreshScheduleData();
         }
         else if(fetchedData.hasOwnProperty('error')) {
           //Inform user
@@ -188,6 +178,10 @@ export default function ConvoScreen() {
           const belleMessage = {messages: fetchedData["error"], user: false, id: count};
           setMessages([...message, belleMessage]);
         }
+        setIsDisabled(false);
+        setIntent("");
+        setInitSched([]);
+        setNewSched([]);
       }
     }
     catch (error){
@@ -196,7 +190,7 @@ export default function ConvoScreen() {
     }
   };
 
-  const getID = async (sched_data) => {
+  const getID = async (sched_data, goal) => {
     //Get the id of the schedule to update
     try{
       let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/get_id" ;
@@ -213,12 +207,18 @@ export default function ConvoScreen() {
       }
       else {
         const fetchedData = await response.json();
-        if(fetchedData.hasOwnProperty('sched_id')){
-          console.log(fetchedData["sched_id"]);
-          return fetchedData["sched_id"];
+        if(goal == "Update"){
+          if(fetchedData.hasOwnProperty('sched_id')){
+            updateSchedule(fetchedData["sched_id"]);
+          }
+          else if(fetchedData.hasOwnProperty('error')) {
+            setCount(count+1);
+            const belleMessage = {messages: "No event with this title on that day was found!", user: false, id: count};
+            setMessages([...message, belleMessage]);
+          }
         }
-        else if(fetchedData.hasOwnProperty('error')) {
-          return false;
+        else if(goal == "Delete"){
+          //shing
         }
       }
     }
@@ -227,7 +227,55 @@ export default function ConvoScreen() {
       return false;
     }
   };
+  const refreshScheduleData = async () => {
+    try{
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id + "/1" ;
+      const response = await fetch(url, {
+        method: 'GET'
+      });
+      if (!response.ok) {
+        alert("Invalid Credentials");
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('error')){
+          alert("An error occured while fetching the data");
+        }
+        else {
+          const data = [];
+          const currData = [];
+          fetchedData.forEach(element => {
 
+            const sched = {
+              sched_id: element["sched_id"],
+              Event: element["Event"], 
+              Date: element["Date"],
+              Start_Time: element["Start Time"],
+              End_Time: element["End Time"],
+              Location: element["Location"],
+              Category: element["Category"]
+            }
+            data.push(sched);
+            const today = new Date();
+            const currsched = new Date(element["Date"]);
+            if(currsched === today){
+              const strSched = {timeStr: element["Start Time"] + "-" + element["End Time"], Title: element["Event"]};
+              currData.push(strSched)
+            }
+
+          });
+          setSchedData(data);
+          if(currData !== null){
+            setSchedToday(currData);
+          }
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+    }
+  }
   const formatSched = (data) => {
     let nData= {};
     data.forEach(element => {
@@ -255,6 +303,7 @@ export default function ConvoScreen() {
           setCount(count+1);
           const belleMessage = {messages: fetchedData["message"], user: false, id: count};
           setMessages([...message, belleMessage]);
+          refreshScheduleData();
         }
         else if(fetchedData.hasOwnProperty('error')) {
           alert(fetchedData["error"]);

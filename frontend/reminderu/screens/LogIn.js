@@ -43,6 +43,8 @@ export default function Login
         else {
           const data = [];
           const currData = [];
+          const today = new Date();
+          const formattedDate = today.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
           fetchedData.forEach(element => {
 
             const sched = {
@@ -55,10 +57,11 @@ export default function Login
               Category: element["Category"]
             }
             data.push(sched);
-            const today = new Date();
+            
             const currsched = new Date(element["Date"]);
-            if(currsched === today){
-              const strSched = {timeStr: element["Start Time"] + "-" + element["End Time"], Title: element["Event"]};
+            const formattedCurrSched = currsched.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            if(formattedDate === formattedCurrSched){
+              const strSched = {timeStr: convertToAMPM(element["Start Time"]) + "-" + convertToAMPM(element["End Time"]), Title: element["Event"]};
               currData.push(strSched)
             }
 
@@ -74,6 +77,19 @@ export default function Login
       console.log(error);
     }
   };
+  function convertToAMPM(timeString) {
+    const [hours, minutes, seconds] = timeString.split(':');
+    let hours12 = parseInt(hours, 10);
+    const suffix = hours12 >= 12 ? 'PM' : 'AM';
+    
+    // Convert hours to 12-hour format
+    hours12 = hours12 % 12 || 12;
+
+    // Add leading zeros to minutes if necessary
+    const paddedMinutes = minutes.padStart(2, '0');
+
+    return `${hours12}:${paddedMinutes} ${suffix}`;
+}
   const checkCredentials = async () => {
     try{
       let url = REMINDERU_URL.USER_URL + User_Email + "/" + User_Password+ "/signin" ;
