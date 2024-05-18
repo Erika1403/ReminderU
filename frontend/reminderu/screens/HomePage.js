@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { FontAwesome5, MaterialIcons, Entypo } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { useUserContext } from '../UserContext';
+import { formatData } from '../functions/UpdateFunctions';
 
 
 export default function HomePage() {
@@ -15,7 +16,6 @@ export default function HomePage() {
   const schedData = useUserContext().schedData;
   const schedToday = useUserContext().schedToday;
   const moment = require('moment-timezone');
-  const philippinesTimeZone = 'Asia/Manila';
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
   const [fontLoaded] = useFonts({
@@ -27,55 +27,13 @@ export default function HomePage() {
 });
 useEffect(() => {
   if(schedData && schedData.length > 0){
-    const result = formatData();
+    const result = formatData(schedData, 2);
     setSchedDateU(result.tempU);
     setSchedDateC(result.tempC);
   }
 }, [schedData]);
 
-const formatData = () => {
-  let tempU = [];
-  let tempC = [];
-  let origDate = new Date();
-  const utcMoment = moment(origDate);
-  const date_t = utcMoment.tz(philippinesTimeZone);
-  const dateToday = new Date(date_t);
-  const options = { 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  };
-  let i = 0;
-  schedData.forEach(element => {
-    let thedate = element.Date + " " + element.Start_Time;
-    let currdate_o = moment.tz(thedate, philippinesTimeZone);
-    const currdate = currdate_o.utc();
-    const formattedDate = new Date(currdate).toLocaleDateString('en-US', options);
-    if(dateToday > currdate){
-      let thedata = {id: i, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
-      tempC.push(thedata);
-    }
-    else if (dateToday <= currdate){
-      let thedata = {id: i, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
-      tempU.push(thedata);
-    }
-    i++;
-  });
-  return {tempC, tempU};
-};
-function convertToAMPM(timeString) {
-  const [hours, minutes, seconds] = timeString.split(':');
-  let hours12 = parseInt(hours, 10);
-  const suffix = hours12 >= 12 ? 'PM' : 'AM';
-  
-  // Convert hours to 12-hour format
-  hours12 = hours12 % 12 || 12;
 
-  // Add leading zeros to minutes if necessary
-  const paddedMinutes = minutes.padStart(2, '0');
-
-  return `${hours12}:${paddedMinutes} ${suffix}`;
-}
 const renderItem = ({item}) => (
   <View style={{
     height: "auto",

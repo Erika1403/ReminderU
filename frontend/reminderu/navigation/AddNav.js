@@ -22,8 +22,7 @@ export default function AddNav() {
             headerTitleAlign: 'center'}}/>
           <Stack.Screen name='new' component={NewReminder} options={{title: 'NEW', headerTitleAlign: 'center', 
             headerTitleStyle: {fontFamily: 'Poppins_Black', color: '#C999D6'}, }}/>
-          <Stack.Screen name='chat' component={StartChatNav} options={{title: 'BELLE', headerTitleAlign: 'center', 
-            headerTitleStyle: {fontFamily: 'Poppins_Black', color: '#C999D6'}, }}/>
+          <Stack.Screen name='chatbelle' component={StartChatNav} options={{headerShown: false}}/>
       </Stack.Navigator>
     )
   }

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import ReminderCon from '../components/ReminderCon';
 import { useUserContext } from '../UserContext';
+import { formatData } from '../functions/UpdateFunctions';
 
 
 export default function SearchPage() {
@@ -11,54 +12,12 @@ export default function SearchPage() {
   const [filteredData, setFilteredData] = useState(null);
   const schedData = useUserContext().schedData;
   const [mysched, setSchedDate] = useState(null);
-  const moment = require('moment-timezone');
-  const philippinesTimeZone = 'Asia/Manila';
   useEffect(() => {
-    const temp = formatData();
+    const temp = formatData(schedData);
     setSchedDate(temp);
   }, [schedData]);
-  const formatData = () => {
-    let temp = [];
-    let origDate = new Date();
-    const utcMoment = moment(origDate);
-    const date_t = utcMoment.tz(philippinesTimeZone);
-    const dateToday = new Date(date_t);
-    const options = { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    };
-  let i = 0;
-  schedData.forEach(element => {
-    let thedate = element.Date + " " + element.Start_Time;
-    let currdate_o = moment.tz(thedate, philippinesTimeZone);
-    const currdate = currdate_o.utc();
-    const formattedDate = new Date(currdate).toLocaleDateString('en-US', options);
-    if(dateToday > currdate){
-      let thedata = {id: i, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
-      temp.push(thedata);
-    }
-    else if (dateToday <= currdate){
-      let thedata = {id: i, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
-      temp.push(thedata);
-    }
-    i++;
-  });
-    return temp;
-};
-  function convertToAMPM(timeString) {
-    const [hours, minutes, seconds] = timeString.split(':');
-    let hours12 = parseInt(hours, 10);
-    const suffix = hours12 >= 12 ? 'PM' : 'AM';
-    
-    // Convert hours to 12-hour format
-    hours12 = hours12 % 12 || 12;
+  
 
-    // Add leading zeros to minutes if necessary
-    const paddedMinutes = minutes.padStart(2, '0');
-
-    return `${hours12}:${paddedMinutes} ${suffix}`;
-};
 const filterData = () => {
   if (!searchQuery) {
     setFilteredData(null);

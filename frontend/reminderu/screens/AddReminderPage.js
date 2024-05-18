@@ -5,41 +5,17 @@ import { useNavigation } from '@react-navigation/native';
 
 
 export default function AddReminderPage() {
-  const [isModalVisible, setIsModalVisible] =useState(false);
   const navigation = useNavigation();
   const handleNew = () => {
-    setIsModalVisible(false);
     navigation.navigate('new');
   };
   const handleChat = () => {
-    setIsModalVisible(false);
-    navigation.navigate('chat');
+    navigation.navigate('chatbelle');
   };
   return (
     <SafeAreaView style={{flex: 1}}>
-      <View style={{alignItems:'center', justifyContent: 'center', flex: 1}}>
-      <TouchableOpacity onPress={() => setIsModalVisible(true)}>
-        <Entypo name="circle-with-plus"  color={ '#B7B8FF'} size={60} 
-              style={{top:-20, backgroundColor:'#fff', borderRadius:100, alignItems:'center'}}/>
-
-      <View style={{width: 60, height: 60, backgroundColor: '#EDBBFA', borderRadius:10, justifyContent: 'center', alignItems: 'center'}}>
-        <FontAwesome5 name="check" size={26} color="#fff" />
-
-        <Modal visible={isModalVisible} 
-              onRequestClose={() => setIsModalVisible(false)}
-              transparent={true}
-              animationType='slide'
-             >
-          <View style={styles.modalContainer}>
-          <View style={styles.CompRemModal}>
-            <Text style={{fontSize:20, fontWeight:'bold', color:'#3D405B'}}>CREATE NEW REMINDER</Text>
-            <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-            <MaterialIcons name="keyboard-arrow-down" size={25} color= '#3D405B'
-            style={{marginBottom: 30}}/>
-            </TouchableOpacity>
-
-
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+      <Text style={{fontSize:20, fontWeight:'bold', color:'#3D405B'}}>CREATE NEW REMINDER</Text>
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
               
               <TouchableOpacity onPress={handleNew} style={styles.selfButton}>
                 <View style={styles.thumbsUp}><Entypo name="thumbs-up" size={25} color="white" /></View>
@@ -51,15 +27,6 @@ export default function AddReminderPage() {
               <Text style={styles.buttonText}>Belle Can Help Me!</Text>
               </TouchableOpacity>
             </View>
-
-          </View>
-          </View>
-        </Modal>
-        </View>
-        <Text style={styles.remTitle}>COMPLETED</Text>
-
-      </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }

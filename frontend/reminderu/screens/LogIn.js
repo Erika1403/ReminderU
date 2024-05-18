@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 import { useUserContext } from '../UserContext';
 import REMINDERU_URL from '../API_ENDPOINTS';
+import { cleanScheduleData } from '../functions/UpdateFunctions';
 
 
 
@@ -41,34 +42,11 @@ export default function Login
           alert("An error occured while fetching the data");
         }
         else {
-          const data = [];
-          const currData = [];
-          const today = new Date();
-          const formattedDate = today.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-          fetchedData.forEach(element => {
-
-            const sched = {
-              sched_id: element["sched_id"],
-              Event: element["Event"], 
-              Date: element["Date"],
-              Start_Time: element["Start Time"],
-              End_Time: element["End Time"],
-              Location: element["Location"],
-              Category: element["Category"]
-            }
-            data.push(sched);
-            
-            const currsched = new Date(element["Date"]);
-            const formattedCurrSched = currsched.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            if(formattedDate === formattedCurrSched){
-              const strSched = {timeStr: convertToAMPM(element["Start Time"]) + "-" + convertToAMPM(element["End Time"]), Title: element["Event"]};
-              currData.push(strSched)
-            }
-
-          });
-          setSchedData(data);
-          if(currData !== null){
-            setSchedToday(currData);
+          const result = cleanScheduleData(fetchedData);
+          setSchedData(result.data);
+          if(result.currData.length > 0){
+            console.log(result.currData.length);
+            setSchedToday(result.currData);
           }
         }
       }
@@ -77,19 +55,7 @@ export default function Login
       console.log(error);
     }
   };
-  function convertToAMPM(timeString) {
-    const [hours, minutes, seconds] = timeString.split(':');
-    let hours12 = parseInt(hours, 10);
-    const suffix = hours12 >= 12 ? 'PM' : 'AM';
-    
-    // Convert hours to 12-hour format
-    hours12 = hours12 % 12 || 12;
-
-    // Add leading zeros to minutes if necessary
-    const paddedMinutes = minutes.padStart(2, '0');
-
-    return `${hours12}:${paddedMinutes} ${suffix}`;
-}
+  
   const checkCredentials = async () => {
     try{
       let url = REMINDERU_URL.USER_URL + User_Email + "/" + User_Password+ "/signin" ;

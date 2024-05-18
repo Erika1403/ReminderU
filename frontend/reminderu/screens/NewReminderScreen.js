@@ -1,21 +1,46 @@
-import { View, Text, SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native'
+import { View, Text, SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Image, Modal, ScrollView, Alert } from 'react-native'
 import React, {useState, useEffect} from 'react'
 import { AntDesign, Fontisto } from '@expo/vector-icons';
-import { useRoute } from '@react-navigation/native';
+import { format } from 'date-fns';
 import { useFonts } from 'expo-font';
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
+import REMINDERU_URL from '../API_ENDPOINTS';
+import { useUserContext } from '../UserContext';
+
+
+const showAlert = (title, themessage) =>
+  Alert.alert(
+    title,
+    themessage,
+    [
+      {
+        text: 'Ok',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'default',
+      },
+    ],
+    {
+      cancelable: true,
+      onDismiss: () =>
+        console.log(
+          'This alert was dismissed by tapping outside of the alert dialog.',
+        ),
+    },
+  );
 
 export default function NewReminder() {
-  const moment = require('moment-timezone');
     const today = new Date();
-    const date = moment().format('MMMM Do, YYYY');
-    const startdate = getFormatedDate(today.setDate(today.getDate()+1), 'YYYY/MM/DD');
+    const userData = useUserContext().userData;
+    const date = format(today, 'yyyy-MM-dd');
+    const schedData = useUserContext().schedData;
+    const [newsched, setNewSched] = useState([]);
+    const startdate = getFormatedDate(today.setDate(today.getDate()+1), 'YYYY-MM-DD');
     const [open, setOpen] = useState(false);
-    const [date_date, setDate] = useState('YYYY/MM/DD');
+    const [date_date, setDate] = useState('YYYY-MM-DD');
     const [showST, setShowST] = useState(false);
     const [showET, setShowET] = useState(false);
-    const [stime, setSTime] = useState('00:00 AM');
-    const [etime, setETime] = useState('00:00 AM');
+    const [stime, setSTime] = useState('00:00');
+    const [etime, setETime] = useState('00:00');
     const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
     const [title, setTitle] = useState('');
@@ -28,28 +53,104 @@ export default function NewReminder() {
     });
 
     const pickerPressed = () => {
-        setOpen(!open);
+      setOpen(!open);
     };
     const tpicker1Pressed = () => {
-        setShowST(!showST);
+      setShowST(!showST);
     };
     const tpicker2Pressed = () => {
-        setShowET(!showET);
+      setShowET(!showET);
     };
 
     const handleDateChange = (propDate) => {
-        setDate(propDate);
-        pickerPressed();
+      setDate(propDate);
+      pickerPressed();
     };
 
     const onChangeSTime = (time) => {
-        setSTime(time);
-        setShowST(false);
-      };
-      const onChangeETime = (time) => {
-        setETime(time);
-        setShowET(false);
-      };
+      setSTime(time);
+      setShowST(false);
+    };
+  
+    const onChangeETime = (time) => {
+      setETime(time);
+      setShowET(false);
+    };
+
+    const clickedSave = () => {
+      console.log("Add New Reminder...");
+      const newData = {
+        Event: title,
+        Date:date_date.replace(/\//g, '-'),
+        Start_Time: stime + ":00",
+        End_Time: etime + ":00",
+        Location: location,
+        Description: description
+      }
+      console.log(newData);
+      checkAvailability(newData);
+    }
+    const addSchedule = async (data) => {
+      try{
+        let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id+ "/0";
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        else {
+          const fetchedData = await response.json();
+          if(fetchedData.hasOwnProperty('message')){
+            //Alert result then go back 
+            showAlert("Success", fetchedData["message"]);
+          }
+          else if(fetchedData.hasOwnProperty('error')) {
+            showAlert("error", fetchedData["error"]);
+          }
+        }
+      }
+      catch (error){
+        console.log(error);
+        return false;
+      }
+    }
+    const checkAvailability = async (idata) => {
+      try{
+        let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/availability" ;
+        let data = {"schedule_records" : schedData, "new_schedule": idata};
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        else {
+          const fetchedData = await response.json();
+          if(fetchedData.hasOwnProperty('available')){
+            addSchedule(idata);
+            setNewSched([]);
+          }
+          else if(fetchedData.hasOwnProperty('First Suggestion')) {
+            // print message about suggestion in modal;
+            const message = "Recommended Schedule: " + fetchedData["First Suggestion"] + " " + fetchedData["Second Suggestion"];
+            showAlert("Conflicting Schedule", message);
+          }
+        }
+      }
+      catch (error){
+        console.log(error);
+        return false;
+      }
+    };
 
   if(!fontLoaded){
     return undefined;
@@ -147,7 +248,7 @@ export default function NewReminder() {
           <Text style={styles.textTitle}>LOCATION</Text>
           <TextInput value={location} onChangeText={txt => setLocation(txt)} style={styles.textInput}/> 
           
-          <TouchableOpacity style={{width: "100%", height: 30, backgroundColor:"blue"}}>
+          <TouchableOpacity onPress={() => clickedSave()} style={{width: "100%", height: 30, backgroundColor:"blue"}}>
               <Text style={{color: 'white'}}>Save</Text>
           </TouchableOpacity>
   
