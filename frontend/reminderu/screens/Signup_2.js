@@ -4,16 +4,54 @@ import { useState } from 'react';
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
 import { AntDesign } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
-import { useNavigation} from '@react-navigation/native';
+import { useNavigation, useRoute} from '@react-navigation/native';
+import REMINDERU_URL from '../API_ENDPOINTS';
+import { format, formatDate } from 'date-fns';
+import { useUserContext } from '../UserContext';
+
 
 const SampleDatePicker = () => {
     const today = new Date();
-    const startdate = getFormatedDate(today.setDate(today.getDate()+1), 'YYYY/MM/DD');
+    const user_data = useRoute().params;
+    const {setUserData, setSchedData, setSchedToday} = useUserContext();
+    const startdate = getFormatedDate(today.setDate(today.getDate()-1), 'YYYY/MM/DD');
     const [open, setOpen] = useState(false);
     const [date, setDate] = useState('');
-
+    const navigation = useNavigation();
     const [User_Name, setName] = useState('');
     const [User_Bday, setBday] = useState('');
+
+    const getAllSchedule = async () => {
+        try{
+          let url = REMINDERU_URL.SCHEDFUNC_URL + user_data.id + "/1" ;
+          const response = await fetch(url, {
+            method: 'GET'
+          });
+          if (!response.ok) {
+            alert("Invalid Credentials");
+            throw new Error(`API request failed with status ${response.status}`);
+          }
+          else {
+            const fetchedData = await response.json();
+            if(fetchedData.hasOwnProperty('error')){
+              alert("An error occured while fetching the data");
+            }
+            else {
+              const result = cleanScheduleData(fetchedData);
+              setSchedData(result.data);
+              if(result.currData.length > 0){
+                console.log(result.currData.length);
+                setSchedToday(result.currData);
+              }
+              navigation.navigate('Home');
+            }
+          }
+        }
+        catch (error){
+          console.log(error);
+        }
+    };
+      
 
     const handleDateChange = (propDate) => {
         setBday(propDate);
@@ -24,7 +62,50 @@ const SampleDatePicker = () => {
         setOpen(!open);
     }
 
-    const navigation = useNavigation();
+    const handleClick = () => {
+        saveAdditionalData(user_data.id);
+        const udata = {
+            user_name:User_Name, 
+            bday: formatDate(User_Bday, 'YYYY-MM-DD'), 
+            user_id: user_data.id, 
+            email: user_data.email
+        }
+        setUserData(udata);
+    };
+
+    const saveAdditionalData = async (uid) => {
+        try{
+            let url = REMINDERU_URL.USER_URL + Email + "/" + Password + "/additional";
+            const data = {
+                "user_id": uid,
+                "bday": formatDate(User_Bday, 'YYYY-MM-DD'),
+                "username": User_Name
+            }
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(data)
+            });
+            if (!response.ok) {
+              throw new Error(`API request failed with status ${response.status}`);
+            }
+            else {
+              const fetchedData = await response.json();
+              if(fetchedData.hasOwnProperty('error')){
+                alert(fetchedData["error"]);
+              }
+              else {
+                //
+                getAllSchedule();
+              }
+            }
+          }
+          catch (error){
+            console.log(error);
+          }
+    }
 
     const [fontLoaded] = useFonts({
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
@@ -77,7 +158,7 @@ const SampleDatePicker = () => {
                                 <View style={styles.modalView}>
                                     <DatePicker
                                         mode='calendar'
-                                        minimumDate={startdate}
+                                        maximumDate={startdate}
                                         selected={date}
                                         onDateChange={handleDateChange}
                                     />
@@ -95,7 +176,7 @@ const SampleDatePicker = () => {
                     </View>
     
                     <View style={{ alignItems: 'center', padding: 30}}>
-                        <TouchableOpacity onPress={() => console.log("Go to Home")}
+                        <TouchableOpacity onPress={() => handleClick()}
                             style={styles.main_buttons}>
                             <Text style={styles.Button_Text}> SIGN UP</Text>
                         </TouchableOpacity>

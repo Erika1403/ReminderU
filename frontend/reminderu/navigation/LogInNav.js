@@ -7,6 +7,7 @@ import Resetpassword from '../screens/Resetpassword';
 import ForgotPassword from '../screens/ForgotPassword';
 import TabNavigation from './tabNavigation';
 import { UserContextProvider } from '../UserContext';
+import Verify2 from '../screens/Verify_2';
 
 
 const Stack=createNativeStackNavigator();
@@ -20,6 +21,7 @@ export default function LogInNav() {
             <Stack.Screen name='Signup2' component={Signup_2}/>
             <Stack.Screen name='Home' component={TabNavigation}/> 
             <Stack.Screen name='Verify' component={Verify}/>
+            <Stack.Screen name='Verify2' component={Verify2}/>
             <Stack.Screen name='ResetPass' component={Resetpassword}/>
             <Stack.Screen name='ForgotPass' component={ForgotPassword}/>
         </Stack.Navigator>

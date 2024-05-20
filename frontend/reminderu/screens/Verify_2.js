@@ -7,7 +7,7 @@ import { OtpInput } from 'react-native-otp-entry';
 import { showAlert } from './NewReminderScreen';
 
 
-export default function Verify({route}) {
+export default function Verify2({route}) {
   const [OTP, setOTP] = useState("");
   const navigation = useNavigation();
   const param = useRoute().params;
@@ -40,7 +40,7 @@ export default function Verify({route}) {
         else if (fetchedData.hasOwnProperty('confirmed')) {
           console.log(fetchedData);
           if(fetchedData["confirmed"] === true){
-            navigation.navigate('Signup2', param);
+            navigation.navigate('LogIn');
           }
           else {
             showAlert("OTP Verification Failed", "Wrong OTP, Try Again!");

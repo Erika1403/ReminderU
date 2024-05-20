@@ -234,48 +234,27 @@ export default function ConvoScreen() {
         method: 'GET'
       });
       if (!response.ok) {
-        alert("Invalid Credentials");
         throw new Error(`API request failed with status ${response.status}`);
       }
       else {
         const fetchedData = await response.json();
         if(fetchedData.hasOwnProperty('error')){
-          alert("An error occured while fetching the data");
+          console.log("error while refreshing schedule");
         }
         else {
-          const data = [];
-          const currData = [];
-          fetchedData.forEach(element => {
-
-            const sched = {
-              sched_id: element["sched_id"],
-              Event: element["Event"], 
-              Date: element["Date"],
-              Start_Time: element["Start Time"],
-              End_Time: element["End Time"],
-              Location: element["Location"],
-              Category: element["Category"]
-            }
-            data.push(sched);
-            const today = new Date();
-            const currsched = new Date(element["Date"]);
-            if(currsched === today){
-              const strSched = {timeStr: element["Start Time"] + "-" + element["End Time"], Title: element["Event"]};
-              currData.push(strSched)
-            }
-
-          });
-          setSchedData(data);
-          if(currData !== null){
-            setSchedToday(currData);
+          const result = cleanScheduleData(fetchedData);
+          setSchedData(result.data);
+          if(result.currData.length > 0){
+            setSchedToday(result.currData);
           }
+          navigation.navigate('add');
         }
       }
     }
     catch (error){
       console.log(error);
     }
-  }
+  };
   const formatSched = (data) => {
     let nData= {};
     data.forEach(element => {

@@ -27,6 +27,7 @@ const filterData = () => {
   const filtered = mysched.filter((item) => 
     item.Title.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
   console.log(filtered);
   setFilteredData(filtered);
 };

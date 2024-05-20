@@ -1,25 +1,36 @@
 import { View, Text, SafeAreaView, TextInput, StyleSheet, TouchableOpacity, Image, Modal, ScrollView } from 'react-native'
 import React, {useState, useEffect} from 'react'
 import { AntDesign, Fontisto } from '@expo/vector-icons';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
+import { showAlert } from './NewReminderScreen';
+import { cleanScheduleData, getOrigDataforScheduling } from '../functions/UpdateFunctions';
+import { convertTimeToMilitary } from '../functions/TimeFunctions';
+import { useUserContext } from '../UserContext';
+import REMINDERU_URL from '../API_ENDPOINTS';
 
 export default function EditReminder() {
   const moment = require('moment-timezone');
-    const origData = useRoute().params;
+    const sched_id = useRoute().params;
+    
     const today = new Date();
     const date = moment().format('MMMM Do, YYYY');
+    const navigation = useNavigation();
     const startdate = getFormatedDate(today.setDate(today.getDate()+1), 'YYYY/MM/DD');
+    const {setSchedData, setSchedToday} = useUserContext();
+    const schedData = useUserContext().schedData;
+    const userData = useUserContext().userData;
+    const foundItem = schedData.find(item => item.sched_id === sched_id);
     const [open, setOpen] = useState(false);
-    const [date_date, setDate] = useState(origData.Date);
+    const [date_date, setDate] = useState(foundItem.Date);
     const [showST, setShowST] = useState(false);
     const [showET, setShowET] = useState(false);
-    const [stime, setSTime] = useState(origData.STime);
-    const [etime, setETime] = useState(origData.ETime);
-    const [location, setLocation] = useState(origData.Location);
-    const [description, setDescription] = useState(origData.Desc);
-    const [title, setTitle] = useState(origData.Title);
+    const [stime, setSTime] = useState(foundItem.Start_Time);
+    const [etime, setETime] = useState(foundItem.End_Time);
+    const [location, setLocation] = useState(foundItem.Location);
+    const [description, setDescription] = useState(foundItem.Desc);
+    const [title, setTitle] = useState(foundItem.Event);
 
     const [fontLoaded] = useFonts({
       'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
@@ -47,10 +58,117 @@ export default function EditReminder() {
         setSTime(time);
         setShowST(false);
       };
-      const onChangeETime = (time) => {
+    const onChangeETime = (time) => {
         setETime(time);
         setShowET(false);
-      };
+    };
+    const handleOnClick= () => {
+      const newData = {
+        Event: title,
+        Date:date_date.replace(/\//g, '-'),
+        Start_Time: convertTimeToMilitary(stime),
+        End_Time: convertTimeToMilitary(etime),
+        Location: location
+      }
+      console.log(newData);
+      checkAvailability(newData);
+    }
+
+    const refreshScheduleData = async () => {
+      try{
+        let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id + "/1" ;
+        const response = await fetch(url, {
+          method: 'GET'
+        });
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        else {
+          const fetchedData = await response.json();
+          if(fetchedData.hasOwnProperty('error')){
+            console.log("An error occured while fetching the data");
+          }
+          else {
+            const result = cleanScheduleData(fetchedData);
+            setSchedData(result.data);
+            if(result.currData.length > 0){
+              setSchedToday(result.currData);
+            }
+            console.log("Schedule successfully edited!");
+            console.log(schedData);
+            navigation.goBack();
+          }
+        }
+      }
+      catch (error){
+        console.log(error);
+      }
+    };
+    const checkAvailability = async (idata) => {
+      try{
+        let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/availability";
+        let origdata = getOrigDataforScheduling(schedData, sched_id)
+        let data = {"schedule_records" : origdata, "new_schedule": idata};
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        else {
+          const fetchedData = await response.json();
+          if(fetchedData.hasOwnProperty('available')){
+            idata.Description = description;
+            updateSchedule(sched_id, idata);
+          }
+          else if(fetchedData.hasOwnProperty('First Suggestion')) {
+            // print message about suggestion in modal;
+            const message = "Recommended Schedule: " + fetchedData["First Suggestion"] + " " + fetchedData["Second Suggestion"];
+            showAlert("Conflicting Schedule!", message);
+          }
+        }
+      }
+      catch (error){
+        console.log(error);
+        return false;
+      }
+    };
+
+    const updateSchedule = async (id, data) => {
+      try{
+        let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id  + "/"+id ;
+        const response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        else {
+          const fetchedData = await response.json();
+          if(fetchedData.hasOwnProperty('message')){
+            // Inform user
+            showAlert("Schedule Updated!", fetchedData["message"]);
+            refreshScheduleData();
+          }
+          else if(fetchedData.hasOwnProperty('error')) {
+            //Inform user
+            showAlert("Error", fetchedData["error"]);
+          }
+        }
+      }
+      catch (error){
+        console.log(error);
+        return false;
+      }
+    };
 
   if(!fontLoaded){
     return undefined;
@@ -61,7 +179,7 @@ export default function EditReminder() {
       <SafeAreaView style={{flex: 1}}> 
         <View style={{ justifyContent: 'center',flex: 1, padding: 30}}>
           <Text style={styles.textTitle}>REMINDER TITLE</Text>
-          <TextInput onChangeText={txt => setTitle(txt)} value={title} style={styles.textInput}/> 
+          <TextInput onChangeText={txt => setTitle(txt)} value={title} style={styles.textInput} editable={false}/> 
   
           <Text style={styles.textTitle}>DESCRIPTION</Text>
           <TextInput onChangeText={txt => setDescription(txt)} value={description} style={styles.descInput} multiline/> 
@@ -148,7 +266,7 @@ export default function EditReminder() {
           <Text style={styles.textTitle}>LOCATION</Text>
           <TextInput value={location} onChangeText={txt => setLocation(txt)} style={styles.textInput}/> 
           
-          <TouchableOpacity style={{width: "100%", height: 30, backgroundColor:"blue"}}>
+          <TouchableOpacity onPress={() => handleOnClick()}style={{width: "100%", height: 30, backgroundColor:"blue"}}>
               <Text style={{color: 'white'}}>Save</Text>
           </TouchableOpacity>
   

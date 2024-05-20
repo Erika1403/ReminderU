@@ -14,7 +14,8 @@ export function cleanScheduleData(fetchedData) {
             Start_Time: element["Start Time"],
             End_Time: element["End Time"],
             Location: element["Location"],
-            Category: element["Category"]
+            Category: element["Category"],
+            Desc: element["description"],
         };
         data.push(sched);
             
@@ -50,7 +51,7 @@ export function formatData(schedData, noofresult=1) {
       const currdate = currdate_o.utc();
       const formattedDate = new Date(currdate).toLocaleDateString('en-US', options);
       if(dateToday > currdate){
-        let thedata = {id: i, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
+        let thedata = {id: element.sched_id, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
         if (noofresult==1){
             temp.push(thedata);
         }
@@ -59,7 +60,7 @@ export function formatData(schedData, noofresult=1) {
         }
       }
       else if (dateToday <= currdate){
-        let thedata = {id: i, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
+        let thedata = {id: element.sched_id, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
         if (noofresult==1){
             temp.push(thedata);
         }
@@ -76,3 +77,21 @@ export function formatData(schedData, noofresult=1) {
         return {tempC, tempU};
     }
   };
+
+export function getOrigDataforScheduling(schedData, id) {
+    const data = [];
+    schedData.forEach(element => {
+        if(element.sched_id != id){
+            let thedata = {
+                "Event": element.Event, 
+                "Date": element.Date,
+                "Start Time": element.Start_Time,
+                "End Time": element.End_Time,
+                "Location": element.Location,
+                "Category": element.Category,
+            }
+            data.push(thedata);
+        }
+    });
+    return data;
+}

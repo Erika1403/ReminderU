@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useUserContext } from '../UserContext';
 import REMINDERU_URL from '../API_ENDPOINTS';
 import { cleanScheduleData } from '../functions/UpdateFunctions';
+import { showAlert } from './NewReminderScreen';
 
 
 
@@ -33,13 +34,13 @@ export default function Login
         method: 'GET'
       });
       if (!response.ok) {
-        alert("Invalid Credentials");
+        showAlert("Error","Invalid Credentials");
         throw new Error(`API request failed with status ${response.status}`);
       }
       else {
         const fetchedData = await response.json();
         if(fetchedData.hasOwnProperty('error')){
-          alert("An error occured while fetching the data");
+          showAlert("Error","An error occured while fetching the data");
         }
         else {
           const result = cleanScheduleData(fetchedData);
@@ -73,7 +74,7 @@ export default function Login
           navigation.navigate("Home");
         }
         else {
-          alert('Invalid Credentials');
+          showAlert("Error",'Invalid Credentials');
         }
       }
     }
@@ -81,6 +82,7 @@ export default function Login
       console.log(error);
     }
   };
+  
   if(!fontLoaded){
     return undefined;
   }

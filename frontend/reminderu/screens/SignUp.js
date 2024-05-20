@@ -3,14 +3,18 @@ import React from 'react';
 import { useState } from 'react';
 import { useFonts } from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
+import { showAlert } from './NewReminderScreen';
+import { AppState } from 'react-native';
+import REMINDERU_URL from '../API_ENDPOINTS';
+
 
 export default function Signup() {
 
   const [Email,setEmail]= useState("");
   const [Password, setPassword] = useState("");
   const [Confirm_Password, setConfirmPassword] = useState("");
-  const USER_URL = "http://10.0.2.2:5000/user/";
   const navigation = useNavigation();
+  const [isActive, setIsActive] = useState(false)
   const [fontLoaded] = useFonts({
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
     'Rum_Raisin':require('../fonts/RumRaisin-Regular.ttf'),
@@ -18,7 +22,7 @@ export default function Signup() {
 
   const ToVerify = async () => {
     try{
-      let url = USER_URL + Email + "/" + Password + "/create";
+      let url = REMINDERU_URL.USER_URL + Email + "/" + Password + "/create";
       const response = await fetch(url, {
         method: 'POST'
       });
@@ -43,30 +47,31 @@ export default function Signup() {
     }
   };
 
+
   const checkPasswords = ()=>{
     if(Password === Confirm_Password && Email !== "" && Password !== "" && Confirm_Password !== "" ){
       ToVerify();
       navigation.navigate("Verify");
     }
     else if(Email ==="" && Password==="" && Confirm_Password===""){
-      alert("Please enter all the fields");
+      showAlert("Empty Field","Please enter all the fields");
     }
     else if ((Email === "" && Password === "") ||
      (Password ==="" && Confirm_Password === "") ||
       (Email==="" && Confirm_Password==="")){
-        alert("Please fill up empty fields");
+        showAlert("Empty Field","Please fill up empty fields");
       }
     else if(Email === ""){
-      alert("Please enter email field");
+      showAlert("Empty Field","Please enter email field");
     }
     else if (Password === ""){
-      alert("Please enter a password");
+      showAlert("Empty Field","Please enter a password");
     }
     else if (Confirm_Password === "") {
-      alert("Please confirm your password");
+      showAlert("Empty Field","Please confirm your password");
     }
     else {
-      alert ("Passwords mismatched!");
+      showAlert("Passwords mismatched!", "Passwords are not the same");
     }
   };
 

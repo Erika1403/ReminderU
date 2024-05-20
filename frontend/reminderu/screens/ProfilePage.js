@@ -1,22 +1,75 @@
-import { View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native'
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert} from 'react-native'
 import React from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons,  Entypo } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { useUserContext } from '../UserContext';
+import { showAlert } from './NewReminderScreen';
+import REMINDERU_URL from '../API_ENDPOINTS';
+import { useNavigation } from '@react-navigation/native';
 
-export default function ProfilePage({ navigation }) {
+export default function ProfilePage() {
   const userData = useUserContext().userData;
   const name = userData.user_name;
   const email = userData.email;
   const bday = userData.bday;
+  const navigation = useNavigation();
   const [fontLoaded] = useFonts({
     'Poppins_ExtraBold': require('../fonts/Poppins-ExtraBold.ttf'),
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
     'Poppins_Regular': require('../fonts/Poppins-Regular.ttf'),
     'RumRaisin': require('../fonts/RumRaisin-Regular.ttf'),
     'Poppins_Bold': require('../fonts/Poppins-Bold.ttf'),
-});
+  });
+
+  const handleLogOut = () => {
+    Alert.alert(
+      "Logging Out",
+      "Are you sure you want to log out?",
+      [
+        {
+          text: 'Yes',
+          onPress: () => logOut(),
+          style: 'default',
+        },
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'default',
+        },
+      ],
+      {
+        cancelable: false,
+        onDismiss: () =>
+          console.log(
+            'This alert was dismissed by tapping outside of the alert dialog.',
+          ),
+      },
+    )
+  };
+  
+  const logOut = async () => {
+    try{
+      let url = REMINDERU_URL.USER_URL + userData.email + "/" + "aaaaa" + "/signout" ;
+      const response = await fetch(url, {
+        method: 'GET'
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('message')){
+          showAlert("Logout", fetchedData['message']);
+          navigation.navigate('LogIn');
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+    }
+  };
+
   if(!fontLoaded){
     return undefined;
   }
@@ -50,7 +103,7 @@ export default function ProfilePage({ navigation }) {
   
           <TouchableOpacity style={styles.profileButton}>
         <Entypo name="log-out" size={23} color="#D9D9D9" />
-          <Text style={styles.profileBtext} onPress={() => navigation.navigate('LogIn')}>Log Out</Text>
+          <Text style={styles.profileBtext} onPress={() => handleLogOut()}>Log Out</Text>
           </TouchableOpacity>
       </View>
       </SafeAreaView>

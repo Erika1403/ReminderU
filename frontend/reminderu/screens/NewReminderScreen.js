@@ -6,9 +6,12 @@ import { useFonts } from 'expo-font';
 import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
 import REMINDERU_URL from '../API_ENDPOINTS';
 import { useUserContext } from '../UserContext';
+import { useNavigation } from '@react-navigation/native';
+import { cleanScheduleData } from '../functions/UpdateFunctions';
+import { convertTimeToMilitary } from '../functions/TimeFunctions';
 
 
-const showAlert = (title, themessage) =>
+export function showAlert (title, themessage){
   Alert.alert(
     title,
     themessage,
@@ -26,13 +29,14 @@ const showAlert = (title, themessage) =>
           'This alert was dismissed by tapping outside of the alert dialog.',
         ),
     },
-  );
+  )};
 
 export default function NewReminder() {
     const today = new Date();
     const userData = useUserContext().userData;
     const date = format(today, 'yyyy-MM-dd');
     const schedData = useUserContext().schedData;
+    const navigation = useNavigation();
     const [newsched, setNewSched] = useState([]);
     const startdate = getFormatedDate(today.setDate(today.getDate()+1), 'YYYY-MM-DD');
     const [open, setOpen] = useState(false);
@@ -82,14 +86,42 @@ export default function NewReminder() {
       const newData = {
         Event: title,
         Date:date_date.replace(/\//g, '-'),
-        Start_Time: stime + ":00",
-        End_Time: etime + ":00",
-        Location: location,
-        Description: description
+        Start_Time: convertTimeToMilitary(stime),
+        End_Time: convertTimeToMilitary(etime),
+        Location: location
       }
       console.log(newData);
       checkAvailability(newData);
     }
+    const refreshScheduleData = async () => {
+      try{
+        let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id + "/1" ;
+        const response = await fetch(url, {
+          method: 'GET'
+        });
+        if (!response.ok) {
+          throw new Error(`API request failed with status ${response.status}`);
+        }
+        else {
+          const fetchedData = await response.json();
+          if(fetchedData.hasOwnProperty('error')){
+            console.log("error while refreshing schedule");
+          }
+          else {
+            const result = cleanScheduleData(fetchedData);
+            setSchedData(result.data);
+            if(result.currData.length > 0){
+              setSchedToday(result.currData);
+            }
+            console.log("new data fetch!");
+            navigation.navigate('add');
+          }
+        }
+      }
+      catch (error){
+        console.log(error);
+      }
+    };
     const addSchedule = async (data) => {
       try{
         let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id+ "/0";
@@ -108,6 +140,7 @@ export default function NewReminder() {
           if(fetchedData.hasOwnProperty('message')){
             //Alert result then go back 
             showAlert("Success", fetchedData["message"]);
+            refreshScheduleData();
           }
           else if(fetchedData.hasOwnProperty('error')) {
             showAlert("error", fetchedData["error"]);
@@ -136,13 +169,14 @@ export default function NewReminder() {
         else {
           const fetchedData = await response.json();
           if(fetchedData.hasOwnProperty('available')){
+            idata.Description = description;
             addSchedule(idata);
             setNewSched([]);
           }
           else if(fetchedData.hasOwnProperty('First Suggestion')) {
             // print message about suggestion in modal;
             const message = "Recommended Schedule: " + fetchedData["First Suggestion"] + " " + fetchedData["Second Suggestion"];
-            showAlert("Conflicting Schedule", message);
+            showAlert("Conflicting Schedule!", message);
           }
         }
       }

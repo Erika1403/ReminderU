@@ -1,12 +1,20 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ScrollView } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import DropdownComponent from '../components/DropdownComponent'
 import { useFonts } from 'expo-font';
 import { Entypo } from '@expo/vector-icons';
 import { useUserContext } from '../UserContext';
 import { formatData } from '../functions/UpdateFunctions';
+import REMINDERU_URL from '../API_ENDPOINTS';
+import { cleanScheduleData } from '../functions/UpdateFunctions';
+import { showAlert } from './NewReminderScreen';
+import { Dropdown } from 'react-native-element-dropdown';
 
+const data = [
+  { label: 'ALL', value: '1' },
+  { label: 'COMPLETED', value: '2' },
+  { label: 'UPCOMING', value: '3' },
+  ];
 
 export default function RemindersPage({navigation}) {
   const [fontLoaded] = useFonts({
@@ -15,23 +23,112 @@ export default function RemindersPage({navigation}) {
     'Poppins': require('../fonts/Poppins-Regular.ttf'),
 });
   const moment = require('moment-timezone');
-  
+  const userData = useUserContext().userData;
+  const {setSchedData, setSchedToday} = useUserContext();
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
   const schedData = useUserContext().schedData;
   const [mysched, setSchedDate] = useState(null);
+  const [value, setValue] = useState(null);
+  const [isFocus, setIsFocus] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredData, setFilteredData] = useState(null);
   
   const handleItemPressed = (item) => {
-    navigation.navigate('edit', item);
+    navigation.navigate('edit', item.id);
+  }
+  const handleItemPressedDel = (item) => {
+    deleteSchedule(item.id);
   }
 
+  const refreshScheduleData = async () => {
+    try{
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id + "/1" ;
+      const response = await fetch(url, {
+        method: 'GET'
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('error')){
+          console.log("An error occured while fetching the data");
+        }
+        else {
+          const result = cleanScheduleData(fetchedData);
+          setSchedData(result.data);
+          if(result.currData.length > 0){
+            setSchedToday(result.currData);
+          }
+          console.log("Schedule successfully deleted!");
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+    }
+  };
+
+  const deleteSchedule = async (id) => {
+    try{
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id  + "/"+id ;
+      const response = await fetch(url, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('message')){
+          // Inform user
+          showAlert("Schedule Deleted!", fetchedData["message"]);
+          refreshScheduleData();
+        }
+        else if(fetchedData.hasOwnProperty('error')) {
+          //Inform user
+          showAlert("Error", fetchedData["error"]);
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     const temp = formatData(schedData);
     setSchedDate(temp);
+    console.log(mysched);
   }, [schedData]);
 
- 
+  
+  const filterData = (val) => {
+    console.log(val);
+    if (val != null) {
+      if(val == 3){
+        const filtered = mysched.filter((item) => 
+          item.Status === "Upcoming"
+        );
+        console.log(filtered);
+        setFilteredData(filtered);
+      }
+      else if (val == 2) {
+        const filtered = mysched.filter((item) => 
+          item.Status === "Completed"
+        );
+        console.log(filtered);
+        setFilteredData(filtered);
+      } 
+      else if (val == 1){
+        console.log("loading all");
+        setFilteredData(mysched);
+      }
+    }
+  };
+
   const renderItem = ({item}) => (
     <View style={{
       height: "auto",
@@ -44,9 +141,14 @@ export default function RemindersPage({navigation}) {
         <Text style={styles.remTitle2}>{item.Title}</Text>
         <Text style={styles.remDesc}>{item.Desc}</Text>
       </View>
-      <TouchableOpacity onPress={() => handleItemPressed(item)}>
-          <Entypo name="edit" color={'#3D405B'} size={25}/>
-      </TouchableOpacity>
+      <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '20%'}}>
+        <TouchableOpacity onPress={() => handleItemPressed(item)}>
+            <Entypo name="edit" color={'#3D405B'} size={25}/>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => handleItemPressedDel(item)}>
+            <Entypo name="trash" color={'#3D405B'} size={25}/>
+        </TouchableOpacity>
+      </View>
       </View>
       <View style={styles.footerCon}>
           <Text style={styles.Time}>{item.STime}</Text>
@@ -55,6 +157,16 @@ export default function RemindersPage({navigation}) {
       </View>
       </View>
   );
+
+  const renderLabel = () => {
+    if (value || isFocus) {
+        return (
+        <></>
+        );
+    }
+    return null;
+  };
+
   if(!fontLoaded){
     return undefined;
   }
@@ -69,11 +181,33 @@ export default function RemindersPage({navigation}) {
   
       <View style={{marginLeft: 20,marginRight: 20, flexDirection: 'row', alignItems: 'center'}}>
         <Text style={styles.remTitle}>MY REMINDERS</Text>
-        <View ><DropdownComponent/></View>
+        <View>
+          <View style={styles.container}>
+            {renderLabel()}
+            <Dropdown
+            style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
+            placeholderStyle={styles.placeholderStyle}
+            selectedTextStyle={styles.selectedTextStyle}
+            data={data}
+            maxHeight={300}
+            labelField="label"
+            valueField="value"
+            placeholder={!isFocus ? 'Select Reminder' : '...'}
+            value={value}
+            onFocus={() => setIsFocus(true)}
+            onBlur={() => setIsFocus(false)}
+            onChange={item => {
+                setValue(item.value);
+                setIsFocus(false);
+                filterData(item.value);
+            }}
+            />
+          </View>
+        </View>
       </View>
   
       <FlatList style={{ maxHeight: 600, padding: 20, paddingBottom: 0}} 
-      data={mysched}
+      data={filteredData || mysched}
       renderItem={renderItem}
       keyExtractor={(item) => item.id.toString()}
       contentContainerStyle={{
@@ -216,6 +350,34 @@ time_picker: {
   width: '100%', 
   backgroundColor: 'pink',
   height: 30,
-  
-}
+},
+container: {
+  marginBottom: -21,
+  marginTop: -14,
+  padding: 16,
+  width: 200,
+},
+dropdown: {
+  height: 50,
+  paddingHorizontal: 8,
+},
+icon: {
+  marginRight: 5,
+},
+placeholderStyle: {
+  fontSize: 15,
+  fontFamily: 'Poppins_SemiBold',
+  color: '#C999D6'
+},
+selectedTextStyle: {
+  fontSize: 16,
+  color: '#3D405B',
+  fontFamily: 'Poppins_SemiBold',
+  textAlign: 'right',
+  marginRight: 5,
+},
+iconStyle: {
+  width: 20,
+  height: 20,
+},
 })
