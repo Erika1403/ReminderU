@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFonts } from 'expo-font';
@@ -38,7 +38,29 @@ export default function RemindersPage({navigation}) {
     navigation.navigate('edit', item.id);
   }
   const handleItemPressedDel = (item) => {
-    deleteSchedule(item.id);
+    Alert.alert(
+      "Delete",
+      "Are you sure you want to delete this schedule??",
+      [
+        {
+          text: 'Yes',
+          onPress: () => deleteSchedule(item.id),
+          style: 'default',
+        },
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+      ],
+      {
+        cancelable: false,
+        onDismiss: () =>
+          console.log(
+            'This alert was dismissed by tapping outside of the alert dialog.',
+          ),
+      },
+    )
   }
 
   const refreshScheduleData = async () => {
@@ -206,7 +228,7 @@ export default function RemindersPage({navigation}) {
         </View>
       </View>
   
-      <FlatList style={{ maxHeight: 600, padding: 20, paddingBottom: 0}} 
+      <FlatList style={{ flex: 1, padding: 20, paddingBottom: 0}} 
       data={filteredData || mysched}
       renderItem={renderItem}
       keyExtractor={(item) => item.id.toString()}

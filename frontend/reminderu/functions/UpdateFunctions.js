@@ -16,6 +16,8 @@ export function cleanScheduleData(fetchedData) {
             Location: element["Location"],
             Category: element["Category"],
             Desc: element["description"],
+            Reminder: element["Reminder"],
+            Reminder_Time: element["Reminder Time"]
         };
         data.push(sched);
             
@@ -51,7 +53,7 @@ export function formatData(schedData, noofresult=1) {
       const currdate = currdate_o.utc();
       const formattedDate = new Date(currdate).toLocaleDateString('en-US', options);
       if(dateToday > currdate){
-        let thedata = {id: element.sched_id, Title: element.Event, Status: "Completed", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
+        let thedata = {id: element.sched_id, Title: element.Event, Status: "Completed", Desc: element.Desc, Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
         if (noofresult==1){
             temp.push(thedata);
         }
@@ -60,7 +62,7 @@ export function formatData(schedData, noofresult=1) {
         }
       }
       else if (dateToday <= currdate){
-        let thedata = {id: element.sched_id, Title: element.Event, Status: "Upcoming", Desc: "", Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
+        let thedata = {id: element.sched_id, Title: element.Event, Status: "Upcoming", Desc: element.Desc, Date: formattedDate, STime: convertToAMPM(element.Start_Time)};
         if (noofresult==1){
             temp.push(thedata);
         }

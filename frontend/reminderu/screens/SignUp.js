@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { showAlert } from './NewReminderScreen';
 import { AppState } from 'react-native';
 import REMINDERU_URL from '../API_ENDPOINTS';
+import isEmail from 'validator/lib/isEmail';
 
 
 export default function Signup() {
@@ -14,7 +15,6 @@ export default function Signup() {
   const [Password, setPassword] = useState("");
   const [Confirm_Password, setConfirmPassword] = useState("");
   const navigation = useNavigation();
-  const [isActive, setIsActive] = useState(false)
   const [fontLoaded] = useFonts({
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
     'Rum_Raisin':require('../fonts/RumRaisin-Regular.ttf'),
@@ -49,7 +49,7 @@ export default function Signup() {
 
 
   const checkPasswords = ()=>{
-    if(Password === Confirm_Password && Email !== "" && Password !== "" && Confirm_Password !== "" ){
+    if(Password === Confirm_Password && Email !== "" && Password !== "" && Confirm_Password !== "" && isEmail(Email) && Password.length >= 6 ){
       ToVerify();
       navigation.navigate("Verify");
     }
@@ -70,8 +70,11 @@ export default function Signup() {
     else if (Confirm_Password === "") {
       showAlert("Empty Field","Please confirm your password");
     }
-    else {
+    else if (Password != Confirm_Password){
       showAlert("Passwords mismatched!", "Passwords are not the same");
+    }
+    else if(!isEmail(Email)){
+      showAlert("Invalid Email","Please enter a valid email address");
     }
   };
 

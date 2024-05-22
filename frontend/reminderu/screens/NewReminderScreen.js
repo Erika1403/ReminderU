@@ -7,7 +7,7 @@ import DatePicker, { getFormatedDate } from 'react-native-modern-datepicker';
 import REMINDERU_URL from '../API_ENDPOINTS';
 import { useUserContext } from '../UserContext';
 import { useNavigation } from '@react-navigation/native';
-import { cleanScheduleData } from '../functions/UpdateFunctions';
+import { cleanScheduleData, getOrigDataforScheduling } from '../functions/UpdateFunctions';
 import { convertTimeToMilitary } from '../functions/TimeFunctions';
 
 
@@ -36,15 +36,15 @@ export default function NewReminder() {
     const userData = useUserContext().userData;
     const date = format(today, 'yyyy-MM-dd');
     const schedData = useUserContext().schedData;
+    const {setSchedData, setSchedToday} = useUserContext();
     const navigation = useNavigation();
-    const [newsched, setNewSched] = useState([]);
-    const startdate = getFormatedDate(today.setDate(today.getDate()+1), 'YYYY-MM-DD');
+    const startdate = getFormatedDate(today.setDate(today.getDate()), 'YYYY-MM-DD');
     const [open, setOpen] = useState(false);
     const [date_date, setDate] = useState('YYYY-MM-DD');
     const [showST, setShowST] = useState(false);
     const [showET, setShowET] = useState(false);
-    const [stime, setSTime] = useState('00:00');
-    const [etime, setETime] = useState('00:00');
+    const [stime, setSTime] = useState('00:00 AM');
+    const [etime, setETime] = useState('00:00 AM');
     const [location, setLocation] = useState('');
     const [description, setDescription] = useState('');
     const [title, setTitle] = useState('');
@@ -82,16 +82,58 @@ export default function NewReminder() {
     };
 
     const clickedSave = () => {
+      const options = {
+        weekday: 'short',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        timeZone: 'GMT+08:00' // Include the time zone in the output
+      };
+      const starttime = date_date.replace(/\//g, '-') + " " +convertTimeToMilitary(stime);
+      const currtime = new Date();
+      const fiveMinutesInMilliseconds = 5 * 60 * 1000;
+      const newtime = new Date(currtime.getTime() + fiveMinutesInMilliseconds);
+      console.log("My Start Time: " + new Date(starttime).toString() + "Current Time: " + new Date().toString());
+      console.log(newtime.toString());
+     if(new Date(starttime) <= currtime){
+      showAlert("Invalid Time", "This time has already passed");
+     }
+     else if (new Date(starttime) <= newtime){
+      showAlert("Error", "Cannot accept this time, because there is no time to process this reminder.");
+     }
+     else if(stime === "00:00 AM" || etime === "00:00 AM"){
+      showAlert("Error", "You have yet to choose the time");
+     }
+     else if(title.trim() === ""){
+      showAlert("Error", "Empty reminder title field!");
+     }
+     else if(location.trim() === "") {
+      showAlert("Error", "Empty Location field");
+     }
+     else if(date_date === "YYYY-MM-DD"){
+      showAlert("Error", "You have not yet picked a date!");
+     }
+     else if(stime === etime){
+      showAlert("Invalid", "Start Time and End Time cannot be the same");
+     }
+     else if (convertTimeToMilitary(stime) > convertTimeToMilitary(etime)){
+      showAlert("Invalid", "End Time cannot be earlier than Start Time");
+     }
+     else{
       console.log("Add New Reminder...");
       const newData = {
-        Event: title,
-        Date:date_date.replace(/\//g, '-'),
-        Start_Time: convertTimeToMilitary(stime),
-        End_Time: convertTimeToMilitary(etime),
-        Location: location
+        "Event": title,
+        "Date":date_date.replace(/\//g, '-'),
+        "Start Time": convertTimeToMilitary(stime),
+        "End Time": convertTimeToMilitary(etime),
+        "Location": location
       }
       console.log(newData);
       checkAvailability(newData);
+     }
     }
     const refreshScheduleData = async () => {
       try{
@@ -155,7 +197,8 @@ export default function NewReminder() {
     const checkAvailability = async (idata) => {
       try{
         let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/availability" ;
-        let data = {"schedule_records" : schedData, "new_schedule": idata};
+        let origdata = getOrigDataforScheduling(schedData, 0);
+        let data = {"schedule_records" : origdata, "new_schedule": idata};
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -171,12 +214,18 @@ export default function NewReminder() {
           if(fetchedData.hasOwnProperty('available')){
             idata.Description = description;
             addSchedule(idata);
-            setNewSched([]);
           }
           else if(fetchedData.hasOwnProperty('First Suggestion')) {
             // print message about suggestion in modal;
-            const message = "Recommended Schedule: " + fetchedData["First Suggestion"] + " " + fetchedData["Second Suggestion"];
-            showAlert("Conflicting Schedule!", message);
+            if(fetchedData.hasOwnProperty('Second Suggestion')){
+              const message = "Recommended Schedule: " + fetchedData["First Suggestion"] + " " + fetchedData["Second Suggestion"];
+              showAlert("Conflicting Schedule!", message);
+            }
+            else {
+              const message = "Recommended Schedule: " + fetchedData["First Suggestion"];
+              showAlert("Conflicting Schedule!", message);
+            }
+            
           }
         }
       }
@@ -203,7 +252,7 @@ export default function NewReminder() {
           <Text style={styles.textTitle}>DATE OF REMINDER</Text>
           <View style={{flexDirection: 'row'}}>
           <TextInput value={date_date} style={styles.dateInput} editable={false}/> 
-          <TouchableOpacity style={styles.remButton} onPress={pickerPressed}>
+          <TouchableOpacity style={styles.remButton} onPress={() => pickerPressed()}>
                <AntDesign name="calendar" size={17} color="white"/>
           </TouchableOpacity>
           <Modal
@@ -236,7 +285,7 @@ export default function NewReminder() {
           <Text style={styles.textTitle}>START TIME</Text>
           <View style={{flexDirection: 'row'}}>
           <TextInput value={stime} style={styles.dateInput}/> 
-          <TouchableOpacity onPress={tpicker1Pressed} style={styles.remButton}>
+          <TouchableOpacity onPress={() => tpicker1Pressed()} style={styles.remButton}>
                <Fontisto name="clock" size={16} color="white"/>
           </TouchableOpacity>
           <Modal
@@ -247,7 +296,7 @@ export default function NewReminder() {
                 <View style={styles.modalView}>
                   <DatePicker
                     mode="time"
-                    minuteInterval={1}
+                    minuteInterval={5}
                     selected={stime}
                     onTimeChange={selectedTime => onChangeSTime(selectedTime)}
                   />
@@ -259,7 +308,7 @@ export default function NewReminder() {
           <Text style={styles.textTitle}>END TIME</Text>
           <View style={{flexDirection: 'row'}}>
           <TextInput value={etime} style={styles.dateInput}/> 
-          <TouchableOpacity onPress={tpicker2Pressed} style={styles.remButton}>
+          <TouchableOpacity onPress={() => tpicker2Pressed()} style={styles.remButton}>
                <Fontisto name="clock" size={16} color="white"/>
           </TouchableOpacity>
           <Modal
@@ -270,7 +319,7 @@ export default function NewReminder() {
                 <View style={styles.modalView}>
                   <DatePicker
                     mode="time"
-                    minuteInterval={1}
+                    minuteInterval={5}
                     selected={etime}
                     onTimeChange={selectedTime => onChangeETime(selectedTime)}
                   />

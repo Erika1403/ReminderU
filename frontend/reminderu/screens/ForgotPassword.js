@@ -5,21 +5,14 @@ import { useFonts } from 'expo-font';
 import { useNavigation} from '@react-navigation/native';
 import { showAlert } from './NewReminderScreen';
 import REMINDERU_URL from '../API_ENDPOINTS';
-import * as dotenv from 'react-native-dotenv';
-import { createClient } from '@supabase/supabase-js'
-
-dotenv.config(); // Load environment variables
+import isEmail from 'validator/lib/isEmail';
 
 
 export default function ForgotPassword () {
   const [email, setEmail]= useState('');
-  const [password, setPassword] = useState(''); 
   const navigation = useNavigation();
-  const API_URL = dotenv.get('DATABASE_URL');
-  const API_KEY = dotenv.get('DATABASE_KEY');
-
   // Create a single supabase client for interacting with your database
-  const supabase = createClient('https://xyzcompany.supabase.co', 'public-anon-key');
+  //const supabase = createClient(API_URL, API_KEY);
 
   const [fontLoaded] = useFonts({
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
@@ -27,14 +20,40 @@ export default function ForgotPassword () {
   });
 
   const handleSendCode = () => {
-    if(email.trim() !== "" && password.trim() !== ""){
+    if(email.trim() !== "" && isEmail(email)){
       //Call Verify
-      resetPassword();
+      passwordlessSignIn();
     }
     else {
       showAlert("Invalid Info!", "You entered invalid information!");
+      setEmail("");
     }
   }
+
+  const passwordlessSignIn = async () => {
+    try{
+      let url = REMINDERU_URL.USER_URL + email + "/" + "aaaaa"+ "/passwordless_signin" ;
+      const response = await fetch(url, {
+        method: 'GET'
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('message')){
+         console.log("okay");
+         //navigation.navigate("Verify2");
+        }
+        else {
+          showAlert("Error",'Invalid Credentials');
+        }
+      }
+    }
+    catch (error){
+      console.log(error);
+    }
+  };
 
 
   if(!fontLoaded){
@@ -67,8 +86,6 @@ export default function ForgotPassword () {
        <View style = {{padding:30}}>
          <Text style= {styles.input_title}>EMAIL ADDRESS</Text>
          <TextInput style= {styles.input}value ={email} onChangeText={setEmail} placeholder='example@gmail.com' placeholderTextColor={'#D9D9D9CC'}/>
-         <Text style= {styles.input_title}>PASSWORD</Text>
-         <TextInput style= {styles.input}value ={password} onChangeText={setPassword} placeholder='example@gmail.com' placeholderTextColor={'#D9D9D9CC'}/>
         </View>
    
        <View style ={{alignItems: 'center', padding: 30}}>

@@ -6,7 +6,7 @@ import { useUserContext } from '../UserContext';
 import REMINDERU_URL from '../API_ENDPOINTS';
 import { cleanScheduleData } from '../functions/UpdateFunctions';
 import { showAlert } from './NewReminderScreen';
-
+import isEmail from 'validator/lib/isEmail';
 
 
 export default function Login
@@ -54,6 +54,32 @@ export default function Login
     }
     catch (error){
       console.log(error);
+    }
+  };
+
+  //Validation
+  const CheckLogIn = () => {
+    if(User_Email === '' || User_Password === ''){
+      showAlert("Error","Please fill in all the fields");
+    }
+    else if (User_Email === '') {
+      showAlert("Error","Please fill in your email address");
+    }
+    else if (User_Password === ''){
+      showAlert("Error", "Please fill in your password");
+    } 
+    else {
+      if (!isEmail(User_Email)){
+        showAlert("Error", "The email you entered is not a valid email address");
+        setEmail("");
+      }
+      else if (User_Password.length < 6){
+        showAlert("Error", "Passwords should be longer than 6 characters!");
+        setPassword("");
+      }
+      else {
+        checkCredentials();
+      }
     }
   };
   
@@ -112,13 +138,12 @@ export default function Login
          <View style={styles.Forgot_Style}> 
            <TouchableOpacity onPress= {()=> navigation.navigate('ForgotPass')}>
              <Text style ={styles.Forgot_Text_Style}>Forgot Password?</Text></TouchableOpacity>
-   
          </View>
      
        <View style ={{alignItems: 'center'}}>
        <TouchableOpacity 
          style ={styles.main_buttons}>
-       <Text style= {styles.Button_Text} onPress={() => checkCredentials()} // Go to Home Page
+       <Text style= {styles.Button_Text} onPress={() => CheckLogIn()} // Go to Home Page
        > UNLOCK YOUR PRODUCTIVITY</Text>
        </TouchableOpacity>
        </View>

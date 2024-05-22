@@ -54,7 +54,7 @@ const filterData = () => {
           </View>
         </View>
     </View>
-    <FlatList style={{ maxHeight: 540, padding: 20}} 
+    <FlatList style={{ flex: 1, padding: 20}} 
     data={filteredData || mysched}
     renderItem={renderItem}
     keyExtractor={(item) => item.id.toString()}

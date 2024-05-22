@@ -8,6 +8,7 @@ import { useNavigation, useRoute} from '@react-navigation/native';
 import REMINDERU_URL from '../API_ENDPOINTS';
 import { format, formatDate } from 'date-fns';
 import { useUserContext } from '../UserContext';
+import {showAlert} from './NewReminderScreen';
 
 
 const SampleDatePicker = () => {
@@ -63,14 +64,19 @@ const SampleDatePicker = () => {
     }
 
     const handleClick = () => {
-        saveAdditionalData(user_data.id);
-        const udata = {
-            user_name:User_Name, 
-            bday: formatDate(User_Bday, 'YYYY-MM-DD'), 
-            user_id: user_data.id, 
-            email: user_data.email
+        if(User_Name.trim() === ""){
+          showAlert("Error", "Empty username field!");
         }
-        setUserData(udata);
+        else {
+          saveAdditionalData(user_data.id);
+          const udata = {
+              user_name:User_Name, 
+              bday: formatDate(User_Bday, 'YYYY-MM-DD'), 
+              user_id: user_data.id, 
+              email: user_data.email
+          }
+          setUserData(udata);
+        }
     };
 
     const saveAdditionalData = async (uid) => {

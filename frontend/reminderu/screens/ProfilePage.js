@@ -103,7 +103,7 @@ export default function ProfilePage() {
   
           <TouchableOpacity style={styles.profileButton}>
         <Entypo name="log-out" size={23} color="#D9D9D9" />
-          <Text style={styles.profileBtext} onPress={() => handleLogOut()}>Log Out</Text>
+          <Text style={styles.profileBtext} onPress={handleLogOut}>Log Out</Text>
           </TouchableOpacity>
       </View>
       </SafeAreaView>

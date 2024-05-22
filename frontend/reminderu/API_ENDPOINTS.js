@@ -1,8 +1,10 @@
+const rootURL ='https://8fa0-136-158-65-42.ngrok-free.app';
+
 const REMINDERU_URL = {
-    USER_URL: 'http://10.0.2.2:5000/user/',
-    SCHEDFUNC_URL: 'http://10.0.2.2:5000/function/',
-    BELLE_URL:'http://10.0.2.2:5000/belle/',
-    SCHEDINFO_URL:'http://10.0.2.2:5000/get_info/'
+    USER_URL: rootURL + '/user/',
+    SCHEDFUNC_URL: rootURL + '/function/',
+    BELLE_URL: rootURL + '/belle/',
+    SCHEDINFO_URL: rootURL + '/get_info/'
 };
 
 export default REMINDERU_URL;

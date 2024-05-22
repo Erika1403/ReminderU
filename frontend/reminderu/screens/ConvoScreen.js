@@ -8,6 +8,7 @@ import {PermissionsAndroid, Platform} from 'react-native';
 import Voice from '@react-native-voice/voice';
 import { useUserContext } from '../UserContext';
 import REMINDERU_URL from '../API_ENDPOINTS';
+import { cleanScheduleData } from '../functions/UpdateFunctions';
 
 
 
@@ -128,26 +129,53 @@ export default function ConvoScreen() {
       console.log("Adding Schedule...");
       checkAvailability();
     }
-    else if(newsched.length < 1 && initSched === 2 && toUpdate){
-      //Function to remove schedule
-      console.log("Updating Schedule...");
-    }
   }, [newsched]);
 
-  useEffect(() => {
-    if(toUpdate){
-      //Find the sched_id of schedule to update
-      getID(initSched, "Update");
-    }
-  }, [toUpdate]);
 
   //Function that should contain functions that will delete data from database via API
   useEffect(() => {
     if(delSched.length === 2) {
       //Function to delete schedule
+      // Get the ID of schedule using the event and date then delete
       console.log("Deleting Schedule...");
+      getID(delSched, "Delete");
     }
   }, [delSched]);
+
+  const deleteSchedule = async (id) => {
+    try{
+      let url = REMINDERU_URL.SCHEDFUNC_URL + userData.user_id  + "/"+id ;
+      const response = await fetch(url, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+      }
+      else {
+        const fetchedData = await response.json();
+        if(fetchedData.hasOwnProperty('message')){
+          // Inform user
+          setCount(count+1);
+          const belleMessage = {messages: fetchedData["message"], user: false, id: count};
+          setMessages([...message, belleMessage]);
+          refreshScheduleData();
+        }
+        else if(fetchedData.hasOwnProperty('error')) {
+          //Inform user
+          setCount(count+1);
+          const belleMessage = {messages: fetchedData["error"], user: false, id: count};
+          setMessages([...message, belleMessage])
+        }
+        setIsDisabled(false);
+        setIntent("");
+        setDelSched([]);
+      }
+    }
+    catch (error){
+      console.log(error);
+      return false;
+    }
+  }
 
   const updateSchedule = async (id) => {
     try{
@@ -171,6 +199,7 @@ export default function ConvoScreen() {
           const belleMessage = {messages: fetchedData["message"], user: false, id: count};
           setMessages([...message, belleMessage]);
           refreshScheduleData();
+          //console.log(schedData);
         }
         else if(fetchedData.hasOwnProperty('error')) {
           //Inform user
@@ -218,12 +247,26 @@ export default function ConvoScreen() {
           }
         }
         else if(goal == "Delete"){
-          //shing
+          if(fetchedData.hasOwnProperty('sched_id')){
+            deleteSchedule(fetchedData['sched_id']);
+          }
+          else if(fetchedData.hasOwnProperty('error')) {
+            setCount(count+1);
+            const belleMessage = {messages: "No event with this title on that day was found!", user: false, id: count};
+            setMessages([...message, belleMessage]);
+          }
         }
       }
     }
     catch (error){
       console.log(error);
+      setCount(count+1);
+      const belleMessage = {messages: "No event with this title on that day was found!", user: false, id: count};
+      setMessages([...message, belleMessage]);
+      setIsDisabled(false);
+      setDelSched([]);
+      setInitSched([]);
+      setNewSched([]);
       return false;
     }
   };
@@ -366,7 +409,7 @@ export default function ConvoScreen() {
           if(fetchedData.hasOwnProperty("function")){
             //If the intent in NONE and the goal is to update, do a function
             if(fetchedData["function"] === "None" && intent === "Update"){
-              setToUpdate(true);
+              getID(initSched, "Update");
               console.log("Should update");
             }
             //Update the function or goal of user
@@ -382,7 +425,7 @@ export default function ConvoScreen() {
             setIsDisabled(false);
           }
           else if(fetchedData.hasOwnProperty("Start Time")){
-            let newS = {"Start_Time" : fetchedData["Start Time"] + ":00"};
+            let newS = {"Start Time" : fetchedData["Start Time"] + ":00"};
             updateSchedData(newS);
             setHasStartTime(true);
             setIsDisabled(false);
@@ -393,7 +436,7 @@ export default function ConvoScreen() {
             setIsDisabled(false);
           }
           else if(fetchedData.hasOwnProperty("End Time")){
-            let newS = {"End_Time" : fetchedData["End Time"] + ":00"};
+            let newS = {"End Time" : fetchedData["End Time"] + ":00"};
             updateSchedData(newS);
             setIsDisabled(false);
           }

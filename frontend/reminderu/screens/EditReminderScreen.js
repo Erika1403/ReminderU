@@ -64,11 +64,11 @@ export default function EditReminder() {
     };
     const handleOnClick= () => {
       const newData = {
-        Event: title,
-        Date:date_date.replace(/\//g, '-'),
-        Start_Time: convertTimeToMilitary(stime),
-        End_Time: convertTimeToMilitary(etime),
-        Location: location
+        "Event": title,
+        "Date":date_date.replace(/\//g, '-'),
+        "Start Time": convertTimeToMilitary(stime),
+        "End Time": convertTimeToMilitary(etime),
+        "Location": location
       }
       console.log(newData);
       checkAvailability(newData);
@@ -107,7 +107,7 @@ export default function EditReminder() {
     const checkAvailability = async (idata) => {
       try{
         let url = REMINDERU_URL.SCHEDINFO_URL + userData.user_id  + "/availability";
-        let origdata = getOrigDataforScheduling(schedData, sched_id)
+        let origdata = getOrigDataforScheduling(schedData, sched_id);
         let data = {"schedule_records" : origdata, "new_schedule": idata};
         const response = await fetch(url, {
           method: 'POST',
