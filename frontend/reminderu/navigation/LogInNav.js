@@ -8,8 +8,7 @@ import ForgotPassword from '../screens/ForgotPassword';
 import TabNavigation from './tabNavigation';
 import { UserContextProvider } from '../UserContext';
 import Verify2 from '../screens/Verify_2';
-
-
+import Alarm from '../screens/AlarmScreen';
 const Stack=createNativeStackNavigator();
 
 export default function LogInNav() {
@@ -24,6 +23,7 @@ export default function LogInNav() {
             <Stack.Screen name='Verify2' component={Verify2}/>
             <Stack.Screen name='ResetPass' component={Resetpassword}/>
             <Stack.Screen name='ForgotPass' component={ForgotPassword}/>
+            <Stack.Screen name='Alarm' component={Alarm} />
         </Stack.Navigator>
         </UserContextProvider>
     )

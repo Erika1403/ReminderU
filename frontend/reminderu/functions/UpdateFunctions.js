@@ -24,7 +24,7 @@ export function cleanScheduleData(fetchedData) {
         const currsched = new Date(element["Date"]);
         const formattedCurrSched = currsched.toLocaleDateString('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' });
         if(formattedDate === formattedCurrSched){
-            const strSched = {timeStr: convertToAMPM(element["Start Time"]) + "-" + convertToAMPM(element["End Time"]), Title: element["Event"]};
+            const strSched = {timeStr: convertToAMPM(element["Start Time"]) + "-" + convertToAMPM(element["End Time"]), Title: element["Event"], Reminder: element["Reminder"], Reminder_Time: element["Reminder Time"]};
             currData.push(strSched)
         }
         });

@@ -1,8 +1,10 @@
+import { useNavigation } from '@react-navigation/native';
 import React, { useEffect } from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 
 
-const CustomNotification = ({ message, onSnooze, onStop }) => {
+const CustomNotification = ({ onSnooze, onStop }) => {
+  const navigation = useNavigation();
     useEffect(() => {
         console.log('Setting timeout...');
         const timeout = setTimeout(() => {
@@ -17,13 +19,15 @@ const CustomNotification = ({ message, onSnooze, onStop }) => {
       }, [onStop]);
 
   return (
-    <View style={styles.notification}>
-      <Text>{message}</Text>
-      <View style={styles.buttonContainer}>
-        <Button title="Snooze" onPress={onSnooze} />
-        <Button title="Stop" onPress={onStop} />
+    <TouchableOpacity onPress={navigation.navigate("Alarm")}>
+      <View style={styles.notification}>
+        <Text>You have a schedule today!</Text>
+        <View style={styles.buttonContainer}>
+          <Button title="Snooze" onPress={onSnooze} />
+          <Button title="Stop" onPress={onStop} />
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 

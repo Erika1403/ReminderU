@@ -122,7 +122,7 @@ export default function EditReminder() {
         else {
           const fetchedData = await response.json();
           if(fetchedData.hasOwnProperty('available')){
-            idata.Description = description;
+            idata.description = description;
             updateSchedule(sched_id, idata);
           }
           else if(fetchedData.hasOwnProperty('First Suggestion')) {

@@ -163,10 +163,12 @@ export default function RemindersPage({navigation}) {
         <Text style={styles.remTitle2}>{item.Title}</Text>
         <Text style={styles.remDesc}>{item.Desc}</Text>
       </View>
-      <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '20%'}}>
-        <TouchableOpacity onPress={() => handleItemPressed(item)}>
+      <View style={{flexDirection: 'row', justifyContent: 'flex-end', width: '20%'}}>
+        { item.Status == "Upcoming" &&
+          <TouchableOpacity onPress={() => handleItemPressed(item)} style={{marginRight: 20}}>
             <Entypo name="edit" color={'#3D405B'} size={25}/>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        }
         <TouchableOpacity onPress={() => handleItemPressedDel(item)}>
             <Entypo name="trash" color={'#3D405B'} size={25}/>
         </TouchableOpacity>

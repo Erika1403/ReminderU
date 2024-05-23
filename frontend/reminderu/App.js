@@ -6,12 +6,16 @@ import LogInNav from './navigation/LogInNav';
 import StartChatNav from './navigation/StartChatNav';
 import TabNavigation from './navigation/tabNavigation';
 import { UserContext } from './screens/Login';
+import { AlarmContextProvider } from './AlarmContext';
+
 const Stack = createNativeStackNavigator();
 
 export default function App( navigation) {
   return (
+    <AlarmContextProvider>
     <NavigationContainer>
         <LogInNav/>
     </NavigationContainer>
+    </AlarmContextProvider>
   )
 }

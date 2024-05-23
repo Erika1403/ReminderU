@@ -5,9 +5,14 @@ import { FontAwesome5, MaterialIcons, Entypo } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { useUserContext } from '../UserContext';
 import { formatData } from '../functions/UpdateFunctions';
+import CustomNotification from '../components/popup';
+import { useAlarmContext } from '../AlarmContext';
+import { useRoute } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
 
 
 export default function HomePage() {
+  const notificationReceived = useAlarmContext().notificationReceived;
   const [isModalVisible_U, setIsModalVisibleU] =useState(false);
   const [isModalVisible_C, setIsModalVisibleC] =useState(false);
   const [mysched_U, setSchedDateU] = useState(null);
@@ -18,44 +23,84 @@ export default function HomePage() {
   const moment = require('moment-timezone');
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
+  const {configureNotifications, handleNotificationClick, handleSnooze, handleStop} = useAlarmContext();
   const [fontLoaded] = useFonts({
     'Poppins_ExtraBold': require('../fonts/Poppins-ExtraBold.ttf'),
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
     'Poppins_Regular': require('../fonts/Poppins-Regular.ttf'),
     'RumRaisin': require('../fonts/RumRaisin-Regular.ttf'),
     'Poppins_Bold': require('../fonts/Poppins-Bold.ttf'),
-});
-useEffect(() => {
-  if(schedData && schedData.length > 0){
-    const result = formatData(schedData, 2);
-    setSchedDateU(result.tempU);
-    setSchedDateC(result.tempC);
-  }
-}, [schedData]);
+  });
+  useEffect(() => {
+    if(schedData && schedData.length > 0){
+      const result = formatData(schedData, 2);
+      setSchedDateU(result.tempU);
+      setSchedDateC(result.tempC);
+    }
+  }, [schedData]);
+  useEffect(() => {
+    console.log("Notification Received:" + notificationReceived);
+  }, [notificationReceived]);
 
+  useEffect(() => {
+    // Use the Date object to get today's date
+    const today = new Date();
+    const strToday = moment(today).format('YYYY-MM-DD');
 
-const renderItem = ({item}) => (
-  <View style={{
-    height: "auto",
-    padding: 10,
-    marginTop: 10,
-    marginLeft: 10,
-    marginRight: 10,
-    backgroundColor:item.Status=="Upcoming"? '#B4D2FF':'#EDBBFA',
-    borderRadius: 10,}}>
-    <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-    <View style={{marginBottom: 5}}>
-      <Text style={styles.remTitle2}>{item.Title}</Text>
-      <Text style={styles.remDesc}>{item.Desc}</Text>
-    </View>
-    </View>
-    <View style={styles.footerCon}>
-        <Text style={styles.Time}>{item.STime}</Text>
-        <Text style={styles.Date}>{item.Date}</Text>
-        <Text style={styles.Category}>{item.Status}</Text>
-    </View>
-    </View>
-);
+    
+    if(schedToday && schedToday.length > 0){
+      schedToday.forEach(element => {
+        // Use moment.js for formatting, including seconds
+        const formattedTime = strToday+'T'+element.Reminder_Time;
+        const events = {
+          title: element.Title,
+          description: element.Reminder,
+          alarm_time: formattedTime
+        };
+        
+        console.log('Configuring notifications...');
+        console.log(events);
+        configureNotifications(events);
+  
+        // Handle notification responses
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+          console.log('Notification clicked' + response);
+          const trigger = events.alarm_time;
+          
+        if (trigger) {
+          handleNotificationClick(trigger, events);
+        } else {
+          console.error('Notification trigger date is not set');
+        }
+        });
+        // Clean up the subscription
+        return () => subscription.remove();
+      });   
+    }
+  }, [schedToday]);
+
+  const renderItem = ({item}) => (
+    <View style={{
+      height: "auto",
+      padding: 10,
+      marginTop: 10,
+      marginLeft: 10,
+      marginRight: 10,
+      backgroundColor:item.Status=="Upcoming"? '#B4D2FF':'#EDBBFA',
+      borderRadius: 10,}}>
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+      <View style={{marginBottom: 5}}>
+        <Text style={styles.remTitle2}>{item.Title}</Text>
+        <Text style={styles.remDesc}>{item.Desc}</Text>
+      </View>
+      </View>
+      <View style={styles.footerCon}>
+          <Text style={styles.Time}>{item.STime}</Text>
+          <Text style={styles.Date}>{item.Date}</Text>
+          <Text style={styles.Category}>{item.Status}</Text>
+      </View>
+      </View>
+  );
 
   if (!fontLoaded){
     return undefined;
@@ -63,6 +108,12 @@ const renderItem = ({item}) => (
   else {
     return (
       <SafeAreaView style={styles.safeContainer}>
+        {notificationReceived && (
+        <CustomNotification
+          onSnooze={handleSnooze}
+          onStop={handleStop}
+        />
+      )}
       <ScrollView>
       <View style={styles.container}>
         <Text style={styles.Title}>Hello, {userData? userData.user_name:"User"}!</Text>

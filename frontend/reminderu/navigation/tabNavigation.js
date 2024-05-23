@@ -1,14 +1,12 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import HomePage from '../screens/HomePage'
-import RemindersPage from '../screens/RemindersPage'
-import StartChatNav from "./StartChatNav";
 import SearchPage from '../screens/SearchPage'
 import { Ionicons, Entypo } from '@expo/vector-icons';
 import { useFonts } from "expo-font";
 import ProfileAboutNav from "./ProfileAboutNav";
-import { useRoute } from '@react-navigation/native';
 import ReminderNav from "./ReminderNav";
 import AddNav from "./AddNav";
+
 
 
 
@@ -18,13 +16,13 @@ export default function TabNavigation() {
   const [fontLoaded] = useFonts({
     'Poppins_Black': require('../fonts/Poppins-Black.ttf'),
 });
+
   if(!fontLoaded){
     return undefined;
   }
   else{
     
     return (
-
       <Tab.Navigator screenOptions={{
           tabBarShowLabel: false,
           tabBarStyle:{
@@ -39,7 +37,7 @@ export default function TabNavigation() {
   
           }
         }}>
-          <Tab.Screen name="HOME" component={HomePage} 
+          <Tab.Screen name="HOME" component={HomePage}
           options={{
             headerShown:false,
             tabBarIcon: ({focused}) => (
