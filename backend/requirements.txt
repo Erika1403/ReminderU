@@ -7,3 +7,4 @@ scikit-learn
 torch
 spacy
 flask_restful
+flask_cors
