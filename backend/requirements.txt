@@ -8,3 +8,6 @@ torch
 spacy
 flask_restful
 flask_cors
+dateparser
+date_spacy
+en-core-web-sm==3.7.1
