@@ -9,14 +9,19 @@ import Voice from '@react-native-voice/voice';
 import { useUserContext } from '../UserContext';
 import REMINDERU_URL from '../API_ENDPOINTS';
 import { cleanScheduleData } from '../functions/UpdateFunctions';
+import { useAlarmContext } from '../AlarmContext';
+import * as Notifications from 'expo-notifications';
 
 
 
 
 export default function ConvoScreen() {
+  const moment = require('moment-timezone');
+
   const param = useRoute().params;
   const userData = useUserContext().userData;
   const schedData = useUserContext().schedData;
+  const schedToday = useUserContext().schedToday;
   const {setSchedData, setSchedToday} = useUserContext();
   const [hasStartTime, setHasStartTime] = useState(false);
   const [showRecordButton, setShowRecordButton] = useState(false);
@@ -31,6 +36,7 @@ export default function ConvoScreen() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [activeMic, setMicActive] = useState(false);
   const [newsched, setNewSched] = useState([]);
+  const {configureNotifications, handleNotificationClick, handleSnooze, handleStop} = useAlarmContext();
   const requestMicPermission = async () => {
     
     if (Platform.OS === 'android'){
@@ -64,7 +70,43 @@ export default function ConvoScreen() {
     requestMicPermission();
   }, []);
 
+  useEffect(() => {
+    // Use the Date object to get today's date
+    const today = new Date();
+    const strToday = moment(today).format('YYYY-MM-DD');
 
+    
+    if(schedToday && schedToday.length > 0){
+      schedToday.forEach(element => {
+        // Use moment.js for formatting, including seconds
+        const formattedTime = strToday+'T'+element.Reminder_Time;
+        const events = {
+          title: element.Title,
+          description: element.Reminder,
+          alarm_time: formattedTime
+        };
+        
+        console.log('Configuring notifications...');
+        console.log(events);
+        configureNotifications(events);
+  
+        // Handle notification responses
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+          console.log('Notification clicked' + response);
+          const trigger = events.alarm_time;
+          
+        if (trigger) {
+          handleNotificationClick(trigger, events);
+          navigation.navigate('Alarm');
+        } else {
+          console.error('Notification trigger date is not set');
+        }
+        });
+        // Clean up the subscription
+        return () => subscription.remove();
+      });   
+    }
+  }, [schedToday]);
 
   const startRecognition = async () => {
     try {

@@ -1,4 +1,4 @@
-const rootURL ='https://49af-136-158-65-42.ngrok-free.app';
+const rootURL ='https://d87f-136-158-65-106.ngrok-free.app'; //Changeable
 
 const REMINDERU_URL = {
     USER_URL: rootURL + '/user/',

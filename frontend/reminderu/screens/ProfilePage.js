@@ -94,6 +94,9 @@ export default function ProfilePage() {
           <Text style={styles.bdayDate}>{bday}</Text>
           </View>
       </View>
+      <View style={styles.quoteContainer}>
+        <Text style={{fontSize: 30, color: '#fff', fontFamily: 'Poppins_ExtraBold', textAlign: 'center', padding: 20}}> "DON'T PUT OFF UNTIL TOMORROW WHAT YOU CAN DO TODAY "</Text>
+      </View>
   
       <View style={styles.btnCon}>
         <TouchableOpacity style={styles.profileButton}>
@@ -198,8 +201,18 @@ const styles = StyleSheet.create({
   btnCon:{
     marginLeft: 30, 
     marginRigh: 20,
-    marginTop: 70,
+    
     alignItems: 'flex-start',
+    justifyContent: 'space-evenly',
     flexDirection:'row'
+  },
+  quoteContainer:{
+    margin: 30,
+    marginTop: 30,
+    padding:10,
+    height:200,
+    borderRadius: 20,
+    backgroundColor: '#DCBDFF',
+    flexDirection: 'column',
   },
 })

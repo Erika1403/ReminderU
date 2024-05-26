@@ -196,14 +196,14 @@ export default function RemindersPage({navigation}) {
   }
   else {
     return (
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
       <View style={styles.dateContainer}>
         <Text style={styles.dateText}>{date}</Text>
         <Text style={styles.dateText} > | </Text>
         <Text style={styles.dateText}>{dayOfWeek}</Text>
       </View>
   
-      <View style={{marginLeft: 20,marginRight: 20, flexDirection: 'row', alignItems: 'center'}}>
+      <View style={{marginLeft: 20,marginRight: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
         <Text style={styles.remTitle}>MY REMINDERS</Text>
         <View>
           <View style={styles.container}>
@@ -382,8 +382,10 @@ container: {
   width: 200,
 },
 dropdown: {
+  marginLeft: 10,
   height: 50,
   paddingHorizontal: 8,
+ 
 },
 icon: {
   marginRight: 5,

@@ -1,11 +1,27 @@
 import { ImageBackground, SafeAreaView, StyleSheet, Text, View, Image, TextInput, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons, Entypo, FontAwesome5, MaterialIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { useAlarmContext } from '../AlarmContext';
 
 
 export default function AddReminderPage() {
   const navigation = useNavigation();
+  const notificationReceived = useAlarmContext().notificationReceived;
+  const [fontLoaded] = useFonts({
+    'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
+    'RumRaisin': require('../fonts/RumRaisin-Regular.ttf'),
+    'Poppins': require('../fonts/Poppins-Regular.ttf'),
+    'Poppins_Black': require('../fonts/Poppins-Black.ttf'),
+});
+
+useEffect(() => {
+  if(notificationReceived){
+    navigation.navigate("Alarm");
+  }
+}, [notificationReceived]);
+
   const handleNew = () => {
     navigation.navigate('new');
   };
@@ -14,9 +30,9 @@ export default function AddReminderPage() {
   };
   return (
     <SafeAreaView style={{flex: 1}}>
-      <Text style={{fontSize:20, fontWeight:'bold', color:'#3D405B'}}>CREATE NEW REMINDER</Text>
-      <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              
+      <View style={{flexDirection: 'column', alignItems: 'center', backgroundColor: '#fff', flex: 1, justifyContent: 'center'}}>
+              <Image source={require('../assets/newReminder.gif')} style={{width: 200, height:200, top: -20}}/>
+              <View style={{}}><Text style={styles.taglineText}>LET'S BE PRODUCTIVE</Text></View>
               <TouchableOpacity onPress={handleNew} style={styles.selfButton}>
                 <View style={styles.thumbsUp}><Entypo name="thumbs-up" size={25} color="white" /></View>
                 <Text style={styles.buttonText}>I Can Do It!</Text>
@@ -48,17 +64,18 @@ const styles = StyleSheet.create({
     padding:20,
   },
   selfButton:{
-    width: 140,
-    height: 90,
+    width: 240,
+    height: 110,
     backgroundColor: '#B4D2FF',
     borderRadius: 10,
-    margin: 20,
+    margin: 40,
+    marginBottom: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   belleButton:{
-    width: 140,
-    height: 90,
+    width: 240,
+    height: 110,
     backgroundColor: '#EDBBFA',
     borderRadius: 10,
     margin: 20,
@@ -68,7 +85,7 @@ const styles = StyleSheet.create({
   },
   buttonText:{
     fontWeight: 'bold',
-    fontSize: 20,
+    fontSize: 25,
     color: '#3D405B',
     top:-25,
     textAlign: 'center',
@@ -89,5 +106,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
+  taglineText: {
+    fontSize: 35,
+    color: '#3D405B',
+    fontFamily: 'Poppins_Black',
+  },
 });

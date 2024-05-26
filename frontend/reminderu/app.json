@@ -29,7 +29,10 @@
     },
     "extra": {
       "API_URL": "https://udwgxjitxvyqcaorkhec.supabase.co",
-      "API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkd2d4aml0eHZ5cWNhb3JraGVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTIzNzE2MjMsImV4cCI6MjAyNzk0NzYyM30.68Ss4_IzYahh23EqdJPKImEhV9iogfjaE5cCHNxLWVo"
+      "API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkd2d4aml0eHZ5cWNhb3JraGVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTIzNzE2MjMsImV4cCI6MjAyNzk0NzYyM30.68Ss4_IzYahh23EqdJPKImEhV9iogfjaE5cCHNxLWVo",
+      "eas": {
+        "projectId": "bee89a22-3e7c-4c63-b2f0-c2d263e0068f"
+      }
     },
     "plugins": [
       "expo-font"

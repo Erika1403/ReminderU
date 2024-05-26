@@ -46,7 +46,7 @@ export const AlarmContextProvider = ({ children }) => {
             setSpeakingInterval(timeinterval);
             
             // Tawagin yung speakEvent function pag may notification na nareceive
-            speakEvent(events.description);
+           speakEvent(events.description);
       
             return {
               shouldShowAlert: true,
@@ -65,7 +65,8 @@ export const AlarmContextProvider = ({ children }) => {
         }
       };
       
-    const speakEvent = (description) => {
+    const speakEvent = async (description) => {
+      try {
         console.log('Speaking event...');
         Speech.speak(description, {
           onDone: () => {
@@ -75,7 +76,9 @@ export const AlarmContextProvider = ({ children }) => {
             }
           },
         });
-      };
+      }catch (error){
+        console.log(error);
+      }};
     
       // Function para i-schedule ang notification alarm
     const scheduleAlarm = async (event) => {
@@ -98,14 +101,14 @@ export const AlarmContextProvider = ({ children }) => {
     };
     
       // Function para i-handle ang notification click
-    const handleNotificationClick = (trigger, event) => {
+    const handleNotificationClick = async (trigger, event) => {
         // Perform specific actions when notification is clicked
         console.log('Handling notification click...');
         const notificationDate = trigger.date || new Date();
         const eventDate = new Date(event.alarm_time);
     
         // Check if the notification time is in the past and the current time is at least one minute after the alarm time
-        if (notificationDate || notificationDate >= eventDate && (eventDate - notificationDate) < 60000) {
+        if (notificationDate && notificationDate >= eventDate &&(notificationDate - eventDate)< 60000) {
           setNotificationReceived(true);
           clearInterval(speakingInterval);
           const timeinterval = setInterval(() => {
@@ -116,8 +119,7 @@ export const AlarmContextProvider = ({ children }) => {
         } 
         else {
           console.log('Alarm Expired');
-          Alert.alert(event.description);
-          Speech.stop();
+          await Speech.stop();
         }
       };
 
@@ -125,7 +127,7 @@ export const AlarmContextProvider = ({ children }) => {
   const handleSnooze = async () => {
     try {
       console.log('Handling snooze...');
-      Speech.stop(); // Stop yung current speech
+      await Speech.stop(); // Stop yung current speech
       clearInterval(speakingInterval); // Clear yung speaking interval
       setSpeakingInterval(null);
       clearInterval(snoozeInterval); // Clear yung existing snooze interval
@@ -157,12 +159,14 @@ export const AlarmContextProvider = ({ children }) => {
   };
 
   // Function para i-handle ang stop action
-  const handleStop = async () => {
+  const handleStop = async() => {
     console.log('Handling stop...');
-    Speech.stop(); // Stop yung current speech
-    setNotificationReceived(false); // Reset yung notification received state
+    await Speech.stop(); // Stop yung current speech
+    setNotificationReceived(false);
+   // Reset yung notification received state
     clearInterval(snoozeInterval); // Clear yung snooze interval
-    clearInterval(speakingInterval); // Clear yung speaking interval
+    clearInterval(speakingInterval);
+     // Clear yung speaking interval
   };  
 
     return (

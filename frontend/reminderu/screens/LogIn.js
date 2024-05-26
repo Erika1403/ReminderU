@@ -116,6 +116,7 @@ export default function Login
     return (
       <SafeAreaView style= {{flex: 1}}>
        <ImageBackground source = {require("../assets/bg.png")} style= {{flex: 1}}>
+       
        <View style= {styles.container}>
          <Image style = {styles.header_image}source = {require("../assets/log_in.png")}/>
        </View>
@@ -127,11 +128,11 @@ export default function Login
    
        <View style = {{padding:30}}>
          <Text style= {styles.input_title}>EMAIL</Text>
-         <TextInput style={styles.input} value={User_Email} onChangeText={setEmail} placeholder='Enter your Email'
+         <TextInput style={styles.inputHolder} value={User_Email} onChangeText={setEmail} placeholder='Enter your Email'
          placeholderTextColor={'#D9D9D9'}/>
          
          <Text style= {styles.input_title}>PASSWORD</Text>
-         <TextInput style={styles.input} value={User_Password} onChangeText={setPassword} 
+         <TextInput style={styles.inputHolder} value={User_Password} onChangeText={setPassword} 
            placeholder= "Enter your Password" secureTextEntry= {true} placeholderTextColor={'#D9D9D9'}/>
        </View>
    
@@ -160,7 +161,7 @@ export default function Login
        <View style = {{alignItems: 'center'}}>
          <Image source = {require("../assets/footerName.png")} style = {styles.footer_style}/>
        </View>
-   
+    
        </ImageBackground>
       </SafeAreaView>
      )
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   header_image:{
-    marginTop: 50,
+    marginTop: 90,
     width: 220,
     height: 210,
   },
@@ -193,7 +194,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#545454",
   },
-  input: {
+  inputHolder: {
     height: 40, 
     width: '100%',
     padding: 10,

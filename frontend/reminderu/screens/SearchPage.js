@@ -74,14 +74,19 @@ const styles = StyleSheet.create({
   },
   safeContainer:{
     flex: 1,
+    backgroundColor: '#fff'   
   },
   seacrhRemCon:{
     marginLeft:20,
     marginRight:20,
+    
   },
   subcontainer:{
     marginTop: -20, 
-    width:'100%'     
+    width:'100%' ,
+    borderColor: 'gray',
+    borderWidth: 2,  
+    borderRadius: 10  
 },
 searchCon:{
     padding:10,

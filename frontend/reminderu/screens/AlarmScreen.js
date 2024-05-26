@@ -1,6 +1,5 @@
 import { StyleSheet, Text, View, Image, TouchableOpacity, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import CustomNotification from '../components/popup'; // Import niyo yung CustomNotification component
 import { useAlarmContext } from '../AlarmContext';
 import { useNavigation } from '@react-navigation/native';
 
@@ -17,11 +16,22 @@ import { useNavigation } from '@react-navigation/native';
 // Define yung main App component
 export default function Alarm() {
   const {handleSnooze, handleStop} = useAlarmContext();
-  const notificationReceived = useAlarmContext().notificationReceived;
   const navigation = useNavigation();
+ 
+  const onStop = () => {
+    console.log('Setting timeout...');
+    const timeout = setTimeout(() => {
+      console.log('Timeout expired. Closing notification...');
+      handleStop();
+    }, 60000); // Change the timeout duration as needed
+  
+    console.log('Clearing timeout...');
+    clearTimeout(timeout);
+  }
 
-  const handleStopClick = () => {
-    handleStop();
+  const handleStopClick = async() => {
+    await handleStop();
+    onStop();
     navigation.goBack();
   }
 
@@ -32,12 +42,6 @@ export default function Alarm() {
 
     return (
       <View style={{flex: 1}}>
-      {notificationReceived && (
-        <CustomNotification
-          onSnooze={handleSnooze}
-          onStop={handleStop}
-        />
-      )}
       <TouchableOpacity style={styles.container}>
         <View>
         <Image source={require('../assets/snooze loading.gif')} style={{width: 300, height: 300}}/>
@@ -45,12 +49,12 @@ export default function Alarm() {
         <View style={{alignItems: 'center'}}>
         <Text style={styles.alarmTitle}>ALARM</Text>
         <Text style={styles.alarmTime}>Time</Text>
-        <TouchableOpacity onPress={handleSnoozeClick}>
+        <TouchableOpacity onPress={() => handleSnoozeClick()}>
           <Text style={styles.snoozeText}>Tap To Snooze</Text>
         </TouchableOpacity>
         </View>
         <View>
-          <TouchableOpacity onPress={handleStopClick} style={styles.stopButton}>
+          <TouchableOpacity onPress={() => handleStopClick()} style={styles.stopButton}>
             <Text style={styles.stopTitle}>STOP</Text>
           </TouchableOpacity>
         </View>

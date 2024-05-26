@@ -5,9 +5,8 @@ import { FontAwesome5, MaterialIcons, Entypo } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import { useUserContext } from '../UserContext';
 import { formatData } from '../functions/UpdateFunctions';
-import CustomNotification from '../components/popup';
 import { useAlarmContext } from '../AlarmContext';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 
 
@@ -24,6 +23,7 @@ export default function HomePage() {
   const date = moment().format('MMMM Do, YYYY');
   const dayOfWeek = moment().format('dddd');
   const {configureNotifications, handleNotificationClick, handleSnooze, handleStop} = useAlarmContext();
+  const navigation = useNavigation();
   const [fontLoaded] = useFonts({
     'Poppins_ExtraBold': require('../fonts/Poppins-ExtraBold.ttf'),
     'Poppins_SemiBold': require('../fonts/Poppins-SemiBold.ttf'),
@@ -38,8 +38,11 @@ export default function HomePage() {
       setSchedDateC(result.tempC);
     }
   }, [schedData]);
+
   useEffect(() => {
-    console.log("Notification Received:" + notificationReceived);
+    if(notificationReceived){
+      navigation.navigate("Alarm");
+    }
   }, [notificationReceived]);
 
   useEffect(() => {
@@ -69,11 +72,13 @@ export default function HomePage() {
           
         if (trigger) {
           handleNotificationClick(trigger, events);
+          navigation.navigate('Alarm');
         } else {
           console.error('Notification trigger date is not set');
         }
         });
         // Clean up the subscription
+        
         return () => subscription.remove();
       });   
     }
@@ -108,12 +113,6 @@ export default function HomePage() {
   else {
     return (
       <SafeAreaView style={styles.safeContainer}>
-        {notificationReceived && (
-        <CustomNotification
-          onSnooze={handleSnooze}
-          onStop={handleStop}
-        />
-      )}
       <ScrollView>
       <View style={styles.container}>
         <Text style={styles.Title}>Hello, {userData? userData.user_name:"User"}!</Text>
@@ -228,6 +227,7 @@ export default function HomePage() {
 const styles = StyleSheet.create({
   safeContainer:{
     flex:1,
+    backgroundColor: '#fff'
   },
   container:{
     padding:30,
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   belleBlob:{
     width: 150,
     height: 140,
-    marginTop: 15,
+    marginTop: 25,
   },
   bellePic:{
     width:130,
@@ -328,7 +328,7 @@ const styles = StyleSheet.create({
   },
   belleTitle:{
     top: -250,
-    fontSize: 24,
+    fontSize: 29,
     color: '#3D405B',
     fontFamily: 'Poppins_ExtraBold',
     justifyContent: 'flex-start',

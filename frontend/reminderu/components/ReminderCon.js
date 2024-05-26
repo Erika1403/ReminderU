@@ -67,5 +67,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins_SemiBold',
         color: '#908D8D',
         marginTop: 5,
+    
     },
 })

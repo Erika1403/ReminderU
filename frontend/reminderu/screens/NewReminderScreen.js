@@ -9,6 +9,9 @@ import { useUserContext } from '../UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { cleanScheduleData, getOrigDataforScheduling } from '../functions/UpdateFunctions';
 import { convertTimeToMilitary } from '../functions/TimeFunctions';
+import { useAlarmContext } from '../AlarmContext';
+import * as Notifications from 'expo-notifications';
+
 
 
 export function showAlert (title, themessage){
@@ -33,9 +36,13 @@ export function showAlert (title, themessage){
 
 export default function NewReminder() {
     const today = new Date();
+    const {configureNotifications, handleNotificationClick, handleSnooze, handleStop} = useAlarmContext();
+    const notificationReceived = useAlarmContext().notificationReceived;
+    const moment = require('moment-timezone');
     const userData = useUserContext().userData;
     const date = format(today, 'yyyy-MM-dd');
     const schedData = useUserContext().schedData;
+    const schedToday = useUserContext().schedToday;
     const {setSchedData, setSchedToday} = useUserContext();
     const navigation = useNavigation();
     const startdate = getFormatedDate(today.setDate(today.getDate()), 'YYYY-MM-DD');
@@ -55,6 +62,51 @@ export default function NewReminder() {
       'RumRaisin': require('../fonts/RumRaisin-Regular.ttf'),
       'Poppins': require('../fonts/Poppins-Regular.ttf'),
     });
+
+    useEffect(() => {
+      if(notificationReceived){
+        navigation.navigate("Alarm");
+      }
+    }, [notificationReceived]);
+  
+
+    useEffect(() => {
+      // Use the Date object to get today's date
+      const today = new Date();
+      const strToday = moment(today).format('YYYY-MM-DD');
+  
+      
+      if(schedToday && schedToday.length > 0){
+        schedToday.forEach(element => {
+          // Use moment.js for formatting, including seconds
+          const formattedTime = strToday+'T'+element.Reminder_Time;
+          const events = {
+            title: element.Title,
+            description: element.Reminder,
+            alarm_time: formattedTime
+          };
+          
+          console.log('Configuring notifications...');
+          console.log(events);
+          configureNotifications(events);
+    
+          // Handle notification responses
+          const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+            console.log('Notification clicked' + response);
+            const trigger = events.alarm_time;
+            
+          if (trigger) {
+            handleNotificationClick(trigger, events);
+            navigation.navigate('Alarm');
+          } else {
+            console.error('Notification trigger date is not set');
+          }
+          });
+          // Clean up the subscription
+          return () => subscription.remove();
+        });   
+      }
+    }, [schedToday]);
 
     const pickerPressed = () => {
       setOpen(!open);
@@ -218,7 +270,7 @@ export default function NewReminder() {
           else if(fetchedData.hasOwnProperty('First Suggestion')) {
             // print message about suggestion in modal;
             if(fetchedData.hasOwnProperty('Second Suggestion')){
-              const message = "Recommended Schedule: " + fetchedData["First Suggestion"] + " " + fetchedData["Second Suggestion"];
+              const message = "Recommended Schedule: \n" + fetchedData["First Suggestion"] + "\n" + fetchedData["Second Suggestion"];
               showAlert("Conflicting Schedule!", message);
             }
             else {
@@ -331,13 +383,10 @@ export default function NewReminder() {
           <Text style={styles.textTitle}>LOCATION</Text>
           <TextInput value={location} onChangeText={txt => setLocation(txt)} style={styles.textInput}/> 
           
-          <TouchableOpacity onPress={() => clickedSave()} style={{width: "100%", height: 30, backgroundColor:"blue"}}>
-              <Text style={{color: 'white'}}>Save</Text>
+          <TouchableOpacity onPress={() => clickedSave()} style={styles.saveButton}>
+              <Text style={{color: '#3D405B', fontFamily: 'Poppins_SemiBold', fontSize: 20}}>SAVE</Text>
           </TouchableOpacity>
   
-          <View style={{alignItems: 'center', justifyContent:'center'}}>
-          <Image source={require('../assets/footerName.png')} style={styles.footerImage}/>
-        </View>
   
         </View>
       </SafeAreaView>
@@ -422,5 +471,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
+    },
+    saveButton: {
+      backgroundColor:'#DCBDFF',
+      borderRadius:10, 
+      height: 40, 
+      width: 300,
+      marginTop: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: "100%", 
+      height: 50, 
+  
     },
 })
